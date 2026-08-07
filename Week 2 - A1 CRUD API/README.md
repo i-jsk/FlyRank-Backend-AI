@@ -26,7 +26,19 @@ Build an in-memory To-Do list API stage-by-stage to master core backend concepts
 - [x] **Stage 2: Read endpoints** — List all tasks (`GET /tasks`) & single task (`GET /tasks/{id}`) with 404 handling.
 - [x] **Stage 3: Create endpoint** — Add new task (`POST /tasks`) with 201 Created & 400 validation.
 - [x] **Stage 4: Update & Delete endpoints** — Modify task (`PUT /tasks/{id}`) & delete task (`DELETE /tasks/{id}` 204 No Content).
-- [ ] **Stage 5: Final Polish & Swagger UI Verification**.
+- [x] **Stage 5: Swagger UI Verification** — Interactive visual documentation at `http://localhost:8000/docs`.
+
+---
+
+## Interactive Swagger UI (`/docs`)
+
+FastAPI automatically generates interactive OpenAPI documentation at **[http://localhost:8000/docs](http://localhost:8000/docs)**:
+
+- **Root & Health**: `GET /`, `GET /health`
+- **Create**: `POST /tasks` (Try it out with `{"title": "Buy milk"}`)
+- **Read**: `GET /tasks`, `GET /tasks/{id}`
+- **Update**: `PUT /tasks/{id}` (Try it out with `{"done": true}`)
+- **Delete**: `DELETE /tasks/{id}` (Returns `204 No Content`)
 
 ---
 
