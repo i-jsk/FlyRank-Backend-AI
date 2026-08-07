@@ -5,7 +5,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # Initialize FastAPI application with rich OpenAPI metadata
-# swagger_ui_parameters hides/collapses the Schemas section by default on page load
 app = FastAPI(
     title="Task API — FlyRank To-Do CRUD Service",
     description=(
@@ -13,7 +12,9 @@ app = FastAPI(
         "the FlyRank Backend AI Internship program."
     ),
     version="1.0.0",
-    swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+    swagger_ui_parameters={
+        "docExpansion": "list",  # Displays endpoints in compact list view to fit on one screen
+    },
 )
 
 
@@ -31,7 +32,7 @@ class TaskUpdate(BaseModel):
     done: Optional[bool] = None
 
     class Config:
-        json_schema_extra = {"example": {"title": "Buy organic milk", "done": True}}
+        json_schema_extra = {"example": {"title": "Buy milk", "done": True}}
 
 
 # In-memory data store initialized with 3 example tasks
@@ -44,13 +45,13 @@ tasks = [
 
 @app.get("/", status_code=200, summary="Root API Metadata")
 def read_root():
-    """Returns core API metadata including name, version, and primary endpoint paths."""
+    """API metadata and available endpoints."""
     return {"name": "Task API", "version": "1.0", "endpoints": ["/tasks"]}
 
 
 @app.get("/health", status_code=200, summary="Server Health Monitor")
 def read_health():
-    """Returns operational uptime status of the server."""
+    """Server health status check."""
     return {"status": "ok"}
 
 
@@ -60,7 +61,7 @@ def get_all_tasks():
     return tasks
 
 
-@app.get("/tasks/{id}", summary="Get Single Task by ID")
+@app.get("/tasks/{id}", summary="Get Task by ID")
 def get_task_by_id(id: int):
     """Retrieves a single task matching the integer path parameter ID. Returns 404 if not found."""
     for task in tasks:
@@ -87,7 +88,7 @@ def create_task(task_input: TaskCreate):
 
 @app.put("/tasks/{id}", status_code=200, summary="Update Task by ID")
 def update_task(id: int, task_input: TaskUpdate):
-    """Updates title and/or done status of an existing task matching ID. Returns 200 OK or 404 Not Found."""
+    """Update title or done status by ID."""
     target_task = None
     for task in tasks:
         if task["id"] == id:
