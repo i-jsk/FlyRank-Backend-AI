@@ -25,7 +25,7 @@ FlyRank-Backend-AI/
 
 | Week / Assignment | Topic / Goal | Tech Stack | Status | Link |
 | :--- | :--- | :--- | :---: | :--- |
-| **Week 2 — A1** | **Build Your First CRUD API** (To-Do List API with FastAPI & Swagger UI) | Python 3.12, FastAPI, Uvicorn | 🔄 In Progress (Stage 3 Complete) | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%202%20-%20A1%20CRUD%20API/README.md) |
+| **Week 2 — A1** | **Build Your First CRUD API** (To-Do List API with FastAPI & Swagger UI) | Python 3.12, FastAPI, Uvicorn | 🔄 In Progress (Stage 4 Complete - Full CRUD) | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%202%20-%20A1%20CRUD%20API/README.md) |
 
 ---
 

@@ -25,8 +25,8 @@ Build an in-memory To-Do list API stage-by-stage to master core backend concepts
 - [x] **Stage 1: Root & Health endpoints** — API metadata (`GET /`) & health check (`GET /health`).
 - [x] **Stage 2: Read endpoints** — List all tasks (`GET /tasks`) & single task (`GET /tasks/{id}`) with 404 handling.
 - [x] **Stage 3: Create endpoint** — Add new task (`POST /tasks`) with 201 Created & 400 validation.
-- [ ] **Stage 4: Update endpoint** — Modify existing task (`PUT /tasks/{id}`).
-- [ ] **Stage 5: Delete endpoint** — Remove task (`DELETE /tasks/{id}`).
+- [x] **Stage 4: Update & Delete endpoints** — Modify task (`PUT /tasks/{id}`) & delete task (`DELETE /tasks/{id}` 204 No Content).
+- [ ] **Stage 5: Final Polish & Swagger UI Verification**.
 
 ---
 
@@ -48,6 +48,6 @@ Build an in-memory To-Do list API stage-by-stage to master core backend concepts
    - Health Monitor: `curl -i http://localhost:8000/health`
    - List All Tasks: `curl -i http://localhost:8000/tasks`
    - Get Task 1: `curl -i http://localhost:8000/tasks/1`
-   - Non-existent Task: `curl -i http://localhost:8000/tasks/99`
    - Create Task: `curl -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d "{\"title\":\"Buy milk\"}"`
-   - Create Invalid Task: `curl -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d "{}"`
+   - Update Task: `curl -i -X PUT http://localhost:8000/tasks/1 -H "Content-Type: application/json" -d "{\"done\":true}"`
+   - Delete Task: `curl -i -X DELETE http://localhost:8000/tasks/1`
