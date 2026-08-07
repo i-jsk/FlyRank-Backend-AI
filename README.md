@@ -30,31 +30,17 @@ This project builds an in-memory To-Do list API stage-by-stage to master core ba
 ## 🚦 Stages & Roadmap
 
 - [x] **Stage 0: Hello, server** — Server startup (`GET /` returning 200 OK & message).
-- [ ] **Stage 1: Read endpoints** — List all tasks (`GET /tasks`) & get single task (`GET /tasks/{id}`).
+- [x] **Stage 1: Root and health endpoints** — API metadata (`GET /`) & health monitor (`GET /health`).
 - [ ] **Stage 2: Create endpoint** — Add new task (`POST /tasks`).
-- [ ] **Stage 3: Update endpoint** — Modify existing task (`PUT /tasks/{id}`).
-- [ ] **Stage 4: Delete endpoint** — Remove task (`DELETE /tasks/{id}`).
-- [ ] **Stage 5: Final Polish & Swagger UI Verification**.
+- [ ] **Stage 3: Read endpoints** — List all tasks (`GET /tasks`) & get single task (`GET /tasks/{id}`).
+- [ ] **Stage 4: Update endpoint** — Modify existing task (`PUT /tasks/{id}`).
+- [ ] **Stage 5: Delete endpoint** — Remove task (`DELETE /tasks/{id}`).
 
 ---
 
 ## 💻 Quick Start & Running Locally
 
-### 1. Set Up Virtual Environment
-
-```bash
-# Windows (PowerShell)
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-### 2. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Run the API Server
+### 1. Run the API Server
 
 ```bash
 python main.py
@@ -62,15 +48,19 @@ python main.py
 uvicorn main:app --reload --port 8000
 ```
 
-### 4. Verify API Endpoints
+### 2. Verify API Endpoints
 
-- **Browser / Curl**:
+- **Root Endpoint**:
   ```bash
   curl -i http://127.0.0.1:8000/
   ```
-  Expected output:
-  `HTTP/1.1 200 OK`
-  `{"message":"Hello, server!","status":"online"}`
+  *Response*: `{"name": "Task API", "version": "1.0", "endpoints": ["/tasks"]}`
+
+- **Health Endpoint**:
+  ```bash
+  curl -i http://127.0.0.1:8000/health
+  ```
+  *Response*: `{"status": "ok"}`
 
 - **Swagger UI Interactive Docs**:
   Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) in your browser.

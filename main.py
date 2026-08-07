@@ -3,16 +3,22 @@ from fastapi import FastAPI
 
 # Initialize FastAPI application
 app = FastAPI(
-    title="FlyRank To-Do CRUD API",
+    title="Task API",
     description="A small API managing a to-do list for FlyRank Backend AI Internship.",
-    version="0.1.0",
+    version="1.0",
 )
 
 
 @app.get("/", status_code=200)
 def read_root():
-    """Stage 0: Root endpoint confirming the server is online and serving requests."""
-    return {"message": "Hello, server!", "status": "online"}
+    """Root endpoint returning API metadata and available endpoints."""
+    return {"name": "Task API", "version": "1.0", "endpoints": ["/tasks"]}
+
+
+@app.get("/health", status_code=200)
+def read_health():
+    """Health check endpoint used to verify that the server is operational."""
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
