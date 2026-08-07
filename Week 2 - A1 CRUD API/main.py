@@ -1,6 +1,8 @@
+from typing import Optional
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 # Initialize FastAPI application
 app = FastAPI(
@@ -8,6 +10,12 @@ app = FastAPI(
     description="A small API managing a to-do list for FlyRank Backend AI Internship.",
     version="1.0",
 )
+
+
+# Pydantic model for task creation payload validation and Swagger UI documentation
+class TaskCreate(BaseModel):
+    title: Optional[str] = None
+
 
 # In-memory data store with 3 initial example tasks
 tasks = [
@@ -42,6 +50,28 @@ def get_task_by_id(id: int):
         if task["id"] == id:
             return task
     return JSONResponse(status_code=404, content={"error": f"Task {id} not found"})
+
+
+@app.post("/tasks", status_code=201)
+def create_task(task_input: TaskCreate):
+    """Create a new task with input validation.
+
+    Generates the next available ID, defaults done to False, and returns 201 Created.
+    Returns 400 Bad Request if title is missing or empty.
+    """
+    # Business rule validation: title must exist, be a non-empty string
+    if not task_input.title or not task_input.title.strip():
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Title is required and cannot be empty"},
+        )
+
+    # Generate next free ID (handles empty list safely)
+    new_id = max([t["id"] for t in tasks], default=0) + 1
+    new_task = {"id": new_id, "title": task_input.title.strip(), "done": False}
+
+    tasks.append(new_task)
+    return JSONResponse(status_code=201, content=new_task)
 
 
 if __name__ == "__main__":

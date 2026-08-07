@@ -24,7 +24,7 @@ Build an in-memory To-Do list API stage-by-stage to master core backend concepts
 - [x] **Stage 0: Hello, server** — Server startup (`GET /` returning 200 OK & hello message).
 - [x] **Stage 1: Root & Health endpoints** — API metadata (`GET /`) & health check (`GET /health`).
 - [x] **Stage 2: Read endpoints** — List all tasks (`GET /tasks`) & single task (`GET /tasks/{id}`) with 404 handling.
-- [ ] **Stage 3: Create endpoint** — Add new task (`POST /tasks`).
+- [x] **Stage 3: Create endpoint** — Add new task (`POST /tasks`) with 201 Created & 400 validation.
 - [ ] **Stage 4: Update endpoint** — Modify existing task (`PUT /tasks/{id}`).
 - [ ] **Stage 5: Delete endpoint** — Remove task (`DELETE /tasks/{id}`).
 
@@ -49,3 +49,5 @@ Build an in-memory To-Do list API stage-by-stage to master core backend concepts
    - List All Tasks: `curl -i http://localhost:8000/tasks`
    - Get Task 1: `curl -i http://localhost:8000/tasks/1`
    - Non-existent Task: `curl -i http://localhost:8000/tasks/99`
+   - Create Task: `curl -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d "{\"title\":\"Buy milk\"}"`
+   - Create Invalid Task: `curl -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d "{}"`
