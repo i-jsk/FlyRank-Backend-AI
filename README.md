@@ -31,8 +31,8 @@ This project builds an in-memory To-Do list API stage-by-stage to master core ba
 
 - [x] **Stage 0: Hello, server** — Server startup (`GET /` returning 200 OK & message).
 - [x] **Stage 1: Root and health endpoints** — API metadata (`GET /`) & health monitor (`GET /health`).
-- [ ] **Stage 2: Create endpoint** — Add new task (`POST /tasks`).
-- [ ] **Stage 3: Read endpoints** — List all tasks (`GET /tasks`) & get single task (`GET /tasks/{id}`).
+- [x] **Stage 2: Read endpoints** — List all tasks (`GET /tasks`) & single task (`GET /tasks/{id}`) with 404 error handling.
+- [ ] **Stage 3: Create endpoint** — Add new task (`POST /tasks`).
 - [ ] **Stage 4: Update endpoint** — Modify existing task (`PUT /tasks/{id}`).
 - [ ] **Stage 5: Delete endpoint** — Remove task (`DELETE /tasks/{id}`).
 
@@ -50,17 +50,23 @@ uvicorn main:app --reload --port 8000
 
 ### 2. Verify API Endpoints
 
-- **Root Endpoint**:
+- **List All Tasks**:
   ```bash
-  curl -i http://127.0.0.1:8000/
+  curl -i http://127.0.0.1:8000/tasks
   ```
-  *Response*: `{"name": "Task API", "version": "1.0", "endpoints": ["/tasks"]}`
+  *Response*: `200 OK` with JSON array of 3 tasks.
 
-- **Health Endpoint**:
+- **Get Single Task (Existing)**:
   ```bash
-  curl -i http://127.0.0.1:8000/health
+  curl -i http://127.0.0.1:8000/tasks/1
   ```
-  *Response*: `{"status": "ok"}`
+  *Response*: `200 OK` with `{"id": 1, "title": "Setup FastAPI project", "done": true}`
+
+- **Get Single Task (Non-Existent)**:
+  ```bash
+  curl -i http://127.0.0.1:8000/tasks/99
+  ```
+  *Response*: `404 Not Found` with `{"error": "Task 99 not found"}`
 
 - **Swagger UI Interactive Docs**:
   Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) in your browser.
