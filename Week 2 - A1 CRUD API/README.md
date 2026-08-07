@@ -34,6 +34,9 @@ Build an in-memory To-Do list API stage-by-stage to master core backend concepts
 
 FastAPI automatically generates interactive OpenAPI documentation at **[http://localhost:8000/docs](http://localhost:8000/docs)**:
 
+![Swagger UI Screenshot](Swagger%20UI-%20CRUD%20API.png)
+
+### Verified Endpoints:
 - **Root & Health**: `GET /`, `GET /health`
 - **Create**: `POST /tasks` (Try it out with `{"title": "Buy milk"}`)
 - **Read**: `GET /tasks`, `GET /tasks/{id}`
