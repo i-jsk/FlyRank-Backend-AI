@@ -1,0 +1,24 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Environment variables
+.env
+.env.local
+
+# Agent context & internal docs files (per project setup)
+docs.md
+memory.md
+
+# IDE / OS settings
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
