@@ -35,10 +35,9 @@ Replace the in-memory array storage from Week 2 with a persistent **SQLite** dat
 
 - [x] **Stage 0: Create SQLite Database** — Auto-create `tasks.db`, `tasks` table, and seed 3 initial tasks if empty.
 - [x] **Stage 1: Read endpoints from DB** — `GET /tasks` & `GET /tasks/{id}` reading directly from SQLite with 404 handling.
-- [x] **Stage 2: Create endpoint to DB** — `POST /tasks` inserting rows into SQLite with 201 Created & 400 validation. Data survives server restarts!
-- [ ] **Stage 3: Update endpoint in DB** — `PUT /tasks/{id}` updating SQLite row.
-- [ ] **Stage 4: Delete endpoint in DB** — `DELETE /tasks/{id}` removing SQLite row.
-- [ ] **Stage 5: Swagger UI & Persistence Verification**.
+- [x] **Stage 2: Create endpoint to DB** — `POST /tasks` inserting rows into SQLite with 201 Created & 400 validation.
+- [x] **Stage 3: Update & Delete endpoints in DB** — `PUT /tasks/{id}` updating SQLite rows & `DELETE /tasks/{id}` removing rows (`204 No Content`).
+- [ ] **Stage 4: Swagger UI & Persistence Verification**.
 
 ---
 
@@ -54,7 +53,7 @@ Replace the in-memory array storage from Week 2 with a persistent **SQLite** dat
    python main.py
    ```
 
-3. **Verify Stage 2 Create & Persistence Endpoints**:
-   - **Create Task**: `curl -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d "{\"title\":\"Buy milk\"}"` (Returns `201 Created`)
-   - **Create Invalid Task**: `curl -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d "{}"` (Returns `400 Bad Request`)
-   - **Verify Persistence**: Stop and restart `python main.py`, then run `curl -i http://localhost:8000/tasks` to confirm new tasks persist in `tasks.db`!
+3. **Verify Stage 3 Update & Delete Endpoints**:
+   - **Update Task**: `curl -i -X PUT http://localhost:8000/tasks/1 -H "Content-Type: application/json" -d "{\"done\":true}"` (Returns `200 OK`)
+   - **Delete Task**: `curl -i -X DELETE http://localhost:8000/tasks/1` (Returns `204 No Content`)
+   - **Confirm Deletion**: `curl -i http://localhost:8000/tasks/1` (Returns `404 Not Found`)
