@@ -18,6 +18,9 @@ FlyRank-Backend-AI/
 │   └── README.md                      # Assignment 1 specific documentation
 ├── Week 3 - A1 CRUD + Database/       # W3 · A1 — CRUD + Database (SQLite)
 │   ├── main.py                        # FastAPI application & SQLite database setup
+│   ├── database.py                    # SQLite connection & initialization
+│   ├── schemas.py                     # Pydantic data contracts
+│   ├── routers/tasks.py               # Task CRUD APIRouter
 │   ├── requirements.txt               # Dependencies (FastAPI, Uvicorn, HTTPX)
 │   └── README.md                      # Assignment 1 specific documentation
 └── [Future Weeks & Assignments...]    # Upcoming FlyRank Backend AI modules
@@ -30,7 +33,7 @@ FlyRank-Backend-AI/
 | Week / Assignment | Topic / Goal | Tech Stack | Status | Link |
 | :--- | :--- | :--- | :---: | :--- |
 | **Week 2 — A1** | **Build Your First CRUD API** (To-Do List API with FastAPI & Swagger UI) | Python 3.12, FastAPI, Uvicorn | ✅ Completed | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%202%20-%20A1%20CRUD%20API/README.md) |
-| **Week 3 — A1** | **CRUD + Database** (SQLite `tasks.db` Persistence) | Python 3.12, FastAPI, SQLite | 🔄 In Progress (Stage 0 Complete) | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A1%20CRUD%20+%20Database/README.md) |
+| **Week 3 — A1** | **CRUD + Database** (SQLite `tasks.db` Persistence) | Python 3.12, FastAPI, SQLite | 🔄 In Progress (Stage 1 Complete) | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A1%20CRUD%20+%20Database/README.md) |
 
 ---
 
