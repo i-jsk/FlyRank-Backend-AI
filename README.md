@@ -33,7 +33,7 @@ FlyRank-Backend-AI/
 | Week / Assignment | Topic / Goal | Tech Stack | Status | Link |
 | :--- | :--- | :--- | :---: | :--- |
 | **Week 2 — A1** | **Build Your First CRUD API** (To-Do List API with FastAPI & Swagger UI) | Python 3.12, FastAPI, Uvicorn | ✅ Completed | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%202%20-%20A1%20CRUD%20API/README.md) |
-| **Week 3 — A1** | **CRUD + Database** (SQLite `tasks.db` Persistence) | Python 3.12, FastAPI, SQLite | 🔄 In Progress (Stage 3 Complete) | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A1%20CRUD%20+%20Database/README.md) |
+| **Week 3 — A1** | **CRUD + Database** (SQLite `tasks.db` Persistence) | Python 3.12, FastAPI, SQLite | 🔄 In Progress (Stage 4 Complete) | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A1%20CRUD%20+%20Database/README.md) |
 
 ---
 
