@@ -24,6 +24,10 @@ FlyRank-Backend-AI/
 │   ├── requirements.txt                   # Dependencies (FastAPI, Uvicorn, HTTPX)
 │   └── README.md                          # Assignment 1 specific documentation
 ├── Week 3 - A2 Containerizing Stack/      # W3 · A2 — Containerizing Stack (Docker + PostgreSQL)
+│   ├── main.py                            # FastAPI application entrypoint
+│   ├── database.py                        # PostgreSQL connection via psycopg & .env
+│   ├── schemas.py                         # Pydantic data contracts
+│   ├── routers/tasks.py                   # Task CRUD APIRouter (PostgreSQL queries)
 │   ├── .gitignore                         # Local git exclusions (.env, etc.)
 │   ├── .env.example                       # Environment configuration template
 │   ├── requirements.txt                   # Dependencies (FastAPI, psycopg, python-dotenv)
@@ -39,7 +43,7 @@ FlyRank-Backend-AI/
 | :--- | :--- | :--- | :---: | :--- |
 | **Week 2 — A1** | **Build Your First CRUD API** (To-Do List API with FastAPI & Swagger UI) | Python 3.12, FastAPI, Uvicorn | ✅ Completed | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%202%20-%20A1%20CRUD%20API/README.md) |
 | **Week 3 — A1** | **CRUD + Database** (SQLite `tasks.db` Persistence) | Python 3.12, FastAPI, SQLite | ✅ Completed | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A1%20CRUD%20+%20Database/README.md) |
-| **Week 3 — A2** | **Containerizing Stack** (Docker + PostgreSQL + Docker Compose) | Python 3.12, FastAPI, PostgreSQL, Docker | 🔄 In Progress (Stage 0 Complete) | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A2%20Containerizing%20Stack/README.md) |
+| **Week 3 — A2** | **Containerizing Stack** (Docker + PostgreSQL + Docker Compose) | Python 3.12, FastAPI, PostgreSQL, Docker | 🔄 In Progress (Stage 1 Complete) | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A2%20Containerizing%20Stack/README.md) |
 
 ---
 
