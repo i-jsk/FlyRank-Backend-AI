@@ -24,6 +24,9 @@ FlyRank-Backend-AI/
 │   ├── requirements.txt                   # Dependencies (FastAPI, Uvicorn, HTTPX)
 │   └── README.md                          # Assignment 1 specific documentation
 ├── Week 3 - A2 Containerizing Stack/      # W3 · A2 — Containerizing Stack (Docker + PostgreSQL)
+│   ├── Dockerfile                         # Container build instructions for FastAPI app
+│   ├── compose.yaml                       # Multi-container orchestration (api + db)
+│   ├── .dockerignore                      # Excludes cache and virtual environment from image
 │   ├── main.py                            # FastAPI application entrypoint
 │   ├── database.py                        # PostgreSQL connection via psycopg & .env
 │   ├── schemas.py                         # Pydantic data contracts
@@ -43,7 +46,7 @@ FlyRank-Backend-AI/
 | :--- | :--- | :--- | :---: | :--- |
 | **Week 2 — A1** | **Build Your First CRUD API** (To-Do List API with FastAPI & Swagger UI) | Python 3.12, FastAPI, Uvicorn | ✅ Completed | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%202%20-%20A1%20CRUD%20API/README.md) |
 | **Week 3 — A1** | **CRUD + Database** (SQLite `tasks.db` Persistence) | Python 3.12, FastAPI, SQLite | ✅ Completed | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A1%20CRUD%20+%20Database/README.md) |
-| **Week 3 — A2** | **Containerizing Stack** (Docker + PostgreSQL + Docker Compose) | Python 3.12, FastAPI, PostgreSQL, Docker | 🔄 In Progress (Stage 3 Complete) | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A2%20Containerizing%20Stack/README.md) |
+| **Week 3 — A2** | **Containerizing Stack** (Docker + PostgreSQL + Docker Compose) | Python 3.12, FastAPI, PostgreSQL, Docker | 🔄 In Progress (Stage 4 Complete) | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A2%20Containerizing%20Stack/README.md) |
 
 ---
 
@@ -52,7 +55,7 @@ FlyRank-Backend-AI/
 - **Python**: 3.10+ (Using 3.12)
 - **Framework**: FastAPI
 - **Databases**: SQLite 3, PostgreSQL 16
-- **Containers**: Docker Desktop / Podman
+- **Containers**: Docker Desktop / Podman & Docker Compose
 - **Version Control**: Git & GitHub
 
 ---

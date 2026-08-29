@@ -6,10 +6,10 @@ Welcome to **Week 3 - Assignment 2** of the FlyRank Backend AI Internship!
 
 ## 🎯 Purpose & Goal
 
-Transition from SQLite file storage to a production-grade **PostgreSQL** database running inside a **Docker container**.
+Transition from SQLite file storage to a production-grade **PostgreSQL** database running inside a **Docker container**, then containerize the entire stack to start both the FastAPI application and PostgreSQL database with **one command** via **Docker Compose**.
 - Manage database configuration securely via `.env`.
-- Ensure data survives restarts using a Docker named volume (`taskdata`).
-- Eventually run both the application and database together via Docker Compose.
+- Ensure data survives container restarts using a Docker named volume (`taskdata`).
+- Run both services connected together in an isolated container network.
 
 ---
 
@@ -27,40 +27,54 @@ Transition from SQLite file storage to a production-grade **PostgreSQL** databas
 
 ---
 
-## 🚀 Running the Stack & Testing CRUD
+## 🚀 Running the Whole Stack in One Command
 
-### 1. Launch PostgreSQL Container in One Command
+### 1. Start App + Database via Docker Compose
 ```bash
-docker run --name taskdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=tasks -p 5432:5432 -v taskdata:/var/lib/postgresql/data -d postgres:16
+docker compose up -d --build
 ```
 
-### 2. Configure Environment (`.env`)
-Create a `.env` file (copied from `.env.example`):
-```env
-DATABASE_URL=postgresql://postgres:dev@localhost:5432/tasks
-```
+#### 🔍 Compose Services Architecture:
+- **`api` service**: Built from [Dockerfile](Dockerfile), runs FastAPI on port `8000`. Connects to `DATABASE_URL=postgresql://postgres:dev@db:5432/tasks` (reaching the database using internal container hostname `db`).
+- **`db` service**: Runs official `postgres:16` image, persists data into named volume `taskdata`.
 
-### 3. Run FastAPI Application
+---
+
+### 2. Verify Running Services
 ```bash
-python main.py
+docker compose ps
 ```
+*(You will see both `api` and `db` running).*
 
-### 4. Test Complete CRUD Operations via `curl.exe`
+---
+
+### 3. Test API Endpoints via `curl.exe`
 ```powershell
-# 1. Create a new task (201 Created)
-curl.exe -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d "{\"title\":\"Build container stack\"}"
+# 1. Create task (201 Created)
+curl.exe -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d "{\"title\":\"Docker Compose Task\"}"
 
 # 2. List all tasks (200 OK)
 curl.exe -i http://localhost:8000/tasks
 
-# 3. Update task status to done (200 OK)
+# 3. Update task (200 OK)
 curl.exe -i -X PUT http://localhost:8000/tasks/1 -H "Content-Type: application/json" -d "{\"done\":true}"
 
-# 4. Delete task by ID (204 No Content)
+# 4. Delete task (204 No Content)
 curl.exe -i -X DELETE http://localhost:8000/tasks/1
+```
 
-# 5. Confirm deletion (404 Not Found)
-curl.exe -i http://localhost:8000/tasks/1
+---
+
+### 4. Verify Volume Persistence Across Stack Restarts
+```powershell
+# Stop and remove containers
+docker compose down
+
+# Bring stack back up
+docker compose up -d
+
+# Verify data still exists (survives restart!)
+curl.exe -i http://localhost:8000/tasks
 ```
 
 ---
@@ -81,5 +95,5 @@ curl.exe -i http://localhost:8000/tasks/1
 - [x] **Stage 1: Connect via .env and create table** — Load `DATABASE_URL` via `python-dotenv`, connect using `psycopg`, create `tasks` table, and seed 3 initial tasks.
 - [x] **Stage 2: Read from Postgres** — Parameterized `GET /tasks` and `GET /tasks/{id}` reading directly from PostgreSQL with 404 error handling.
 - [x] **Stage 3: Full CRUD on Postgres** — Complete `POST`, `PUT`, `DELETE` operations using SQL queries (`RETURNING *`) on containerized PostgreSQL.
-- [ ] **Stage 4: Containerize Application** — Create `Dockerfile` and build app image.
-- [ ] **Stage 5: Docker Compose Stack** — Start app + Postgres with one `docker compose up` command.
+- [x] **Stage 4: Docker-compose the whole stack** — Multi-container `Dockerfile` + `compose.yaml` starting `api` and `db` with volume persistence across full-stack restarts.
+- [ ] **Stage 5: Final Documentation & Verification**.

@@ -1,0 +1,23 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+node_modules/
+
+# Local environment & databases
+.env
+*.db
+*.sqlite3
+tasks.db
+
+# Documentation & Git
+.git
+.gitignore
+docs.md
+memory.md
