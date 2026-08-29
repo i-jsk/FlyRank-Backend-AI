@@ -45,13 +45,16 @@ DATABASE_URL=postgresql://postgres:dev@localhost:5432/tasks
 python main.py
 ```
 
-### 4. Verify PostgreSQL Database & Seeded Tasks
+### 4. Test Read Endpoints
 ```bash
-# Check tables
-docker exec -it taskdb psql -U postgres -d tasks -c "\dt"
+# List all tasks (200 OK)
+curl -i http://localhost:8000/tasks
 
-# View seeded rows
-docker exec -it taskdb psql -U postgres -d tasks -c "SELECT * FROM tasks;"
+# Get single task (200 OK)
+curl -i http://localhost:8000/tasks/1
+
+# Get non-existent task (404 Not Found)
+curl -i http://localhost:8000/tasks/999
 ```
 
 ---
@@ -70,7 +73,7 @@ docker exec -it taskdb psql -U postgres -d tasks -c "SELECT * FROM tasks;"
 
 - [x] **Stage 0: Postgres in Docker + gitignore** — Launch PostgreSQL container with persistent volume, configure `.env.example` & `.gitignore`.
 - [x] **Stage 1: Connect via .env and create table** — Load `DATABASE_URL` via `python-dotenv`, connect using `psycopg`, create `tasks` table, and seed 3 initial tasks.
-- [ ] **Stage 2: Full CRUD on Postgres** — Verify all CRUD endpoints against PostgreSQL.
-- [ ] **Stage 3: Containerize Application** — Create `Dockerfile` and build app image.
-- [ ] **Stage 4: Docker Compose Stack** — Start app + Postgres with one `docker compose up` command.
-- [ ] **Stage 5: Final Documentation & Verification**.
+- [x] **Stage 2: Read from Postgres** — Parameterized `GET /tasks` and `GET /tasks/{id}` reading directly from PostgreSQL with 404 error handling.
+- [ ] **Stage 3: Full CRUD on Postgres** — Verify create, update, delete endpoints against PostgreSQL.
+- [ ] **Stage 4: Containerize Application** — Create `Dockerfile` and build app image.
+- [ ] **Stage 5: Docker Compose Stack** — Start app + Postgres with one `docker compose up` command.
