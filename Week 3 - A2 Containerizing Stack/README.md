@@ -1,21 +1,34 @@
-# W3 · A2 — Containerizing Stack 🐳
+# Week 3 — Assignment 2: Containerizing Stack
 
-Welcome to **Week 3 - Assignment 2** of the FlyRank Backend AI Internship!
+This module contains the containerized implementation of the Task CRUD API developed for the FlyRank Backend AI Internship.
 
 ---
 
-## What This Is
+## Overview
 
-A production-grade, containerized **To-Do REST API** built with **FastAPI** and **PostgreSQL 16**. 
+A production-ready **Task CRUD REST API** built with **FastAPI** and **PostgreSQL 16**.
 - The entire stack (FastAPI web application + PostgreSQL relational database) runs in isolated Docker containers on a shared bridge network.
-- Database credentials and connection parameters are managed securely via environment variables (`.env`).
-- Database state and task rows persist across full-stack restarts using a Docker named volume (`taskdata`).
+- Configuration and database credentials are managed through environment variables (`.env`).
+- Persistent storage is guaranteed across container restarts using a Docker named volume (`taskdata`).
 
 ---
 
-## The One Command to Run Everything
+## Technology Stack
 
-Start the entire application and database stack with a single command:
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Language** | Python 3.12 | Modern typed Python |
+| **Framework** | FastAPI | High-performance Python web API framework |
+| **Database** | PostgreSQL 16 | Relational database server |
+| **Database Driver** | `psycopg` (v3) | PostgreSQL database adapter with binary extensions |
+| **Configuration** | `python-dotenv` | Environment variable management |
+| **Container Engine** | Docker & Docker Compose | Multi-container lifecycle and volume orchestration |
+
+---
+
+## Quick Start Guide (One Command)
+
+Start both the FastAPI application and PostgreSQL database with a single command:
 
 ```bash
 docker compose up -d --build
