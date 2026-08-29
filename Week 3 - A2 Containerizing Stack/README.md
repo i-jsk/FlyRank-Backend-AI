@@ -27,7 +27,7 @@ Transition from SQLite file storage to a production-grade **PostgreSQL** databas
 
 ---
 
-## 🚀 Running the Stack
+## 🚀 Running the Stack & Testing CRUD
 
 ### 1. Launch PostgreSQL Container in One Command
 ```bash
@@ -45,16 +45,22 @@ DATABASE_URL=postgresql://postgres:dev@localhost:5432/tasks
 python main.py
 ```
 
-### 4. Test Read Endpoints
-```bash
-# List all tasks (200 OK)
-curl -i http://localhost:8000/tasks
+### 4. Test Complete CRUD Operations via `curl.exe`
+```powershell
+# 1. Create a new task (201 Created)
+curl.exe -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d "{\"title\":\"Build container stack\"}"
 
-# Get single task (200 OK)
-curl -i http://localhost:8000/tasks/1
+# 2. List all tasks (200 OK)
+curl.exe -i http://localhost:8000/tasks
 
-# Get non-existent task (404 Not Found)
-curl -i http://localhost:8000/tasks/999
+# 3. Update task status to done (200 OK)
+curl.exe -i -X PUT http://localhost:8000/tasks/1 -H "Content-Type: application/json" -d "{\"done\":true}"
+
+# 4. Delete task by ID (204 No Content)
+curl.exe -i -X DELETE http://localhost:8000/tasks/1
+
+# 5. Confirm deletion (404 Not Found)
+curl.exe -i http://localhost:8000/tasks/1
 ```
 
 ---
@@ -74,6 +80,6 @@ curl -i http://localhost:8000/tasks/999
 - [x] **Stage 0: Postgres in Docker + gitignore** — Launch PostgreSQL container with persistent volume, configure `.env.example` & `.gitignore`.
 - [x] **Stage 1: Connect via .env and create table** — Load `DATABASE_URL` via `python-dotenv`, connect using `psycopg`, create `tasks` table, and seed 3 initial tasks.
 - [x] **Stage 2: Read from Postgres** — Parameterized `GET /tasks` and `GET /tasks/{id}` reading directly from PostgreSQL with 404 error handling.
-- [ ] **Stage 3: Full CRUD on Postgres** — Verify create, update, delete endpoints against PostgreSQL.
+- [x] **Stage 3: Full CRUD on Postgres** — Complete `POST`, `PUT`, `DELETE` operations using SQL queries (`RETURNING *`) on containerized PostgreSQL.
 - [ ] **Stage 4: Containerize Application** — Create `Dockerfile` and build app image.
 - [ ] **Stage 5: Docker Compose Stack** — Start app + Postgres with one `docker compose up` command.
