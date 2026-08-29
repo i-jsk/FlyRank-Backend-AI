@@ -4,96 +4,132 @@ Welcome to **Week 3 - Assignment 2** of the FlyRank Backend AI Internship!
 
 ---
 
-## 🎯 Purpose & Goal
+## What This Is
 
-Transition from SQLite file storage to a production-grade **PostgreSQL** database running inside a **Docker container**, then containerize the entire stack to start both the FastAPI application and PostgreSQL database with **one command** via **Docker Compose**.
-- Manage database configuration securely via `.env`.
-- Ensure data survives container restarts using a Docker named volume (`taskdata`).
-- Run both services connected together in an isolated container network.
-
----
-
-## 🛠️ Technology Stack (Python Lane)
-
-| Component | Technology | Description |
-| :--- | :--- | :--- |
-| **Language** | Python 3.10+ (3.12) | Modern typed Python |
-| **Framework** | FastAPI | High-performance Python web framework |
-| **Database** | PostgreSQL 16 | Containerized relational database |
-| **Database Driver** | `psycopg` (v3 with binary) | Official PostgreSQL database adapter |
-| **Configuration** | `python-dotenv` | Loads `.env` configuration securely |
-| **Container Engine** | Docker Desktop / Podman | Container runtime and volume manager |
-| **Orchestration** | Docker Compose | Multi-container orchestration (`compose.yaml`) |
+A production-grade, containerized **To-Do REST API** built with **FastAPI** and **PostgreSQL 16**. 
+- The entire stack (FastAPI web application + PostgreSQL relational database) runs in isolated Docker containers on a shared bridge network.
+- Database credentials and connection parameters are managed securely via environment variables (`.env`).
+- Database state and task rows persist across full-stack restarts using a Docker named volume (`taskdata`).
 
 ---
 
-## 🚀 Running the Whole Stack in One Command
+## The One Command to Run Everything
 
-### 1. Start App + Database via Docker Compose
+Start the entire application and database stack with a single command:
+
 ```bash
 docker compose up -d --build
 ```
 
-#### 🔍 Compose Services Architecture:
-- **`api` service**: Built from [Dockerfile](Dockerfile), runs FastAPI on port `8000`. Connects to `DATABASE_URL=postgresql://postgres:dev@db:5432/tasks` (reaching the database using internal container hostname `db`).
-- **`db` service**: Runs official `postgres:16` image, persists data into named volume `taskdata`.
-
----
-
-### 2. Verify Running Services
+To stop and tear down the stack:
 ```bash
-docker compose ps
-```
-*(You will see both `api` and `db` running).*
-
----
-
-### 3. Test API Endpoints via `curl.exe`
-```powershell
-# 1. Create task (201 Created)
-curl.exe -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d "{\"title\":\"Docker Compose Task\"}"
-
-# 2. List all tasks (200 OK)
-curl.exe -i http://localhost:8000/tasks
-
-# 3. Update task (200 OK)
-curl.exe -i -X PUT http://localhost:8000/tasks/1 -H "Content-Type: application/json" -d "{\"done\":true}"
-
-# 4. Delete task (204 No Content)
-curl.exe -i -X DELETE http://localhost:8000/tasks/1
-```
-
----
-
-### 4. Verify Volume Persistence Across Stack Restarts
-```powershell
-# Stop and remove containers
 docker compose down
-
-# Bring stack back up
-docker compose up -d
-
-# Verify data still exists (survives restart!)
-curl.exe -i http://localhost:8000/tasks
 ```
 
 ---
 
-## 📊 Database Schema (`tasks` table in PostgreSQL)
+## Environment Configuration
 
-| Column Name | Data Type | Constraints | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | `SERIAL` | `PRIMARY KEY` | Unique auto-incrementing task ID |
-| `title` | `TEXT` | `NOT NULL` | Description of the task |
-| `done` | `BOOLEAN` | `NOT NULL DEFAULT FALSE` | Task completion status (`TRUE` / `FALSE`) |
+Configuration is managed via environment variables. Before starting the stack, copy the example template:
+
+```bash
+cp .env.example .env
+```
+
+### Required Variables ([.env.example](.env.example)):
+| Variable | Example Value | Description |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | `postgresql://postgres:dev@db:5432/tasks` | Internal connection string for API container |
+| `POSTGRES_USER` | `postgres` | Database administrator username |
+| `POSTGRES_PASSWORD` | `dev` | Database password |
+| `POSTGRES_DB` | `tasks` | Initial database name |
+| `POSTGRES_PORT` | `5432` | Database port |
+
+> [!NOTE]
+> `.env` is git-ignored for security. Only `.env.example` is committed to the repository.
 
 ---
 
-## 🚦 Stage Progress Roadmap
+## API Endpoints Matrix
+
+| Operation | HTTP Method | Path | Status Codes | Description |
+| :--- | :---: | :--- | :---: | :--- |
+| **Root Metadata** | `GET` | `/` | `200 OK` | Core API metadata and available endpoint index |
+| **Health Monitor** | `GET` | `/health` | `200 OK` | Health uptime status (`{"status": "ok"}`) |
+| **List All Tasks** | `GET` | `/tasks` | `200 OK` | Retrieves all tasks from PostgreSQL database |
+| **Get Task by ID** | `GET` | `/tasks/{id}` | `200 OK`, `404 Not Found` | Retrieves single task by primary key |
+| **Create Task** | `POST` | `/tasks` | `201 Created`, `400 Bad Request` | Inserts a new task (`RETURNING id, title, done`) |
+| **Update Task** | `PUT` | `/tasks/{id}` | `200 OK`, `400 Bad Request`, `404 Not Found` | Updates title/done status in PostgreSQL |
+| **Delete Task** | `DELETE` | `/tasks/{id}` | `204 No Content`, `404 Not Found` | Deletes task row from database |
+
+---
+
+## Pasted `curl -i` Request & Response Example Below
+
+### 1. List Tasks (`GET /tasks`)
+```text
+$ curl.exe -i http://localhost:8000/tasks
+
+HTTP/1.1 200 OK
+date: Sat, 29 Aug 2026 16:22:50 GMT
+server: uvicorn
+content-length: 167
+content-type: application/json
+
+[
+  {"id": 1, "title": "Setup FastAPI project", "done": true},
+  {"id": 2, "title": "Build Stage 2 read endpoints", "done": false},
+  {"id": 3, "title": "Publish to GitHub", "done": false}
+]
+```
+
+### 2. Create Task (`POST /tasks`)
+```text
+$ curl.exe -i -X POST http://localhost:8000/tasks -H "Content-Type: application/json" -d '{"title": "Docker Compose Task"}'
+
+HTTP/1.1 201 Created
+date: Sat, 29 Aug 2026 16:23:05 GMT
+server: uvicorn
+content-length: 56
+content-type: application/json
+
+{"id": 4, "title": "Docker Compose Task", "done": false}
+```
+
+---
+
+## Database Inspection in PostgreSQL Container
+
+### 1. Table Relations (`\dt` in `psql`)
+```text
+$ docker compose exec db psql -U postgres -d tasks -c "\dt"
+
+         List of relations
+ Schema | Name  | Type  |  Owner   
+--------+-------+-------+----------
+ public | tasks | table | postgres
+(1 row)
+```
+
+### 2. Query Seeded & Persisted Rows
+```text
+$ docker compose exec db psql -U postgres -d tasks -c "SELECT * FROM tasks;"
+
+ id |            title             | done 
+----+------------------------------+------
+  1 | Setup FastAPI project        | t
+  2 | Build Stage 2 read endpoints | f
+  3 | Publish to GitHub            | f
+(3 rows)
+```
+
+---
+
+## Stage Progress Roadmap
 
 - [x] **Stage 0: Postgres in Docker + gitignore** — Launch PostgreSQL container with persistent volume, configure `.env.example` & `.gitignore`.
 - [x] **Stage 1: Connect via .env and create table** — Load `DATABASE_URL` via `python-dotenv`, connect using `psycopg`, create `tasks` table, and seed 3 initial tasks.
 - [x] **Stage 2: Read from Postgres** — Parameterized `GET /tasks` and `GET /tasks/{id}` reading directly from PostgreSQL with 404 error handling.
 - [x] **Stage 3: Full CRUD on Postgres** — Complete `POST`, `PUT`, `DELETE` operations using SQL queries (`RETURNING *`) on containerized PostgreSQL.
 - [x] **Stage 4: Docker-compose the whole stack** — Multi-container `Dockerfile` + `compose.yaml` starting `api` and `db` with volume persistence across full-stack restarts.
-- [ ] **Stage 5: Final Documentation & Verification**.
+- [x] **Stage 5: Publish to GitHub & One-command stack documentation** — Completed documentation, endpoint table, pasted `curl` output, and fresh clone verification.
