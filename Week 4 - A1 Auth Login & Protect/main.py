@@ -3,31 +3,32 @@ import sys
 from pathlib import Path
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from supabase import create_client, Client
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 # Ensure current package path is available for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Load environment configuration from .env
 load_dotenv()
-
-# Read environment variables
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://your-project.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "your_anon_key")
 PORT = int(os.getenv("PORT", 3000))
 
-# Initialize Supabase client
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Import shared Supabase client
+from supabase_client import supabase
+
+# Log required Stage 0 checkpoint message on startup
 print("Server running and connected to Supabase", flush=True)
 
 from database import init_db
 from routers.tasks import router as tasks_router
+from routers.auth import router as auth_router
 
 # Initialize PostgreSQL database schema and seed table
 try:
-    init_db()
-except Exception as e:
+    is_docker = "db:5432" in os.getenv("DATABASE_URL", "")
+    init_db(max_retries=10 if is_docker else 1, retry_delay=1.0 if is_docker else 0.1)
+except Exception:
     # Non-fatal fallback if running standalone without PostgreSQL container active
     print("Database note: PostgreSQL container not running locally.")
 
@@ -42,7 +43,17 @@ app = FastAPI(
     },
 )
 
-# Register modular /tasks router from previous build
+# Custom validation exception handler to return 400 instead of default 422
+@app.exception_handler(RequestValidationError)
+def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=400,
+        content={"error": "Email and password are required"},
+    )
+
+
+# Register modular routers
+app.include_router(auth_router)
 app.include_router(tasks_router)
 
 
@@ -52,7 +63,7 @@ def read_root():
     return {
         "status": "online",
         "message": "Server running and connected to Supabase",
-        "endpoints": ["/tasks", "/docs", "/health"],
+        "endpoints": ["/auth/signup", "/auth/login", "/tasks", "/docs", "/health"],
     }
 
 

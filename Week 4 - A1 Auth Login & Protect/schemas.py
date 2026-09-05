@@ -30,3 +30,17 @@ class TaskResponse(BaseModel):
         json_schema_extra = {
             "example": {"id": 1, "title": "Setup FastAPI project", "done": True}
         }
+
+
+# Schema for user authentication (signup & login)
+class UserAuth(BaseModel):
+    email: Optional[str] = None
+    password: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "test@example.com",
+                "password": "password123",
+            }
+        }

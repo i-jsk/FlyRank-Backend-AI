@@ -140,19 +140,79 @@ http://localhost:3000/docs
 
 ---
 
+## Stage 1 Verification (Open Auth: Sign Up & Log In)
+
+Stage 1 implements user registration (`POST /auth/signup`) and authentication (`POST /auth/login`) via Supabase Auth IdP.
+
+> [!TIP]
+> **One-Time Supabase Setting**: In your Supabase Dashboard under **Authentication → Providers → Email**, turn **Confirm email** off so new users can log in immediately after registration without waiting for verification emails.
+
+### 1. User Sign Up (`POST /auth/signup`)
+```bash
+curl.exe -i -X POST http://localhost:3000/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+**Response (`201 Created`)**:
+Returns the created user object from Supabase (containing user `id`, `email`, `created_at`, etc.).
+
+### 2. Validation Checks (`400 Bad Request`)
+If `email` or `password` is missing, empty, or whitespace, the server rejects the request:
+```bash
+curl.exe -i -X POST http://localhost:3000/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}'
+```
+**Response (`400 Bad Request`)**:
+```json
+{"error":"Email and password are required"}
+```
+
+### 3. User Log In (`POST /auth/login`)
+```bash
+curl.exe -i -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+**Response (`200 OK`)**:
+Returns session credentials including the cryptographic `access_token` (JWT) and `refresh_token`:
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "...",
+  "token_type": "bearer",
+  "user": { "id": "...", "email": "test@example.com" }
+}
+```
+
+### 4. Invalid Credentials Handling (`401 Unauthorized`)
+If an invalid email or password is provided:
+```bash
+curl.exe -i -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"wrong@example.com","password":"wrongpassword"}'
+```
+**Response (`401 Unauthorized`)**:
+```json
+{"error":"Invalid login credentials"}
+```
+
+---
+
 ## API Endpoints Matrix
 
-| Operation | HTTP Method | Path | Access Level | Description |
-| :--- | :---: | :--- | :--- | :--- |
-| **Root Metadata** | `GET` | `/` | Public | System status and available endpoints |
-| **Health Monitor** | `GET` | `/health` | Public | Server uptime and status |
-| **List Tasks** | `GET` | `/tasks` | Open / Pre-auth | Retrieves tasks from PostgreSQL database |
-| **Get Task by ID** | `GET` | `/tasks/{id}` | Open / Pre-auth | Retrieves single task by primary key |
-| **Create Task** | `POST` | `/tasks` | Open / Pre-auth | Inserts new task into database |
-| **Update Task** | `PUT` | `/tasks/{id}` | Open / Pre-auth | Updates task title or done state |
-| **Delete Task** | `DELETE` | `/tasks/{id}` | Open / Pre-auth | Deletes task row from database |
-| **Sign Up** | `POST` | `/auth/signup` | Public | Registers a new user account (Upcoming) |
-| **Log In** | `POST` | `/auth/login` | Public | Authenticates user & returns JWT (Upcoming) |
-| **Log Out** | `POST` | `/auth/logout` | Protected | Terminates user session (Upcoming) |
-| **User Profile** | `GET` | `/protected/profile` | Protected | Returns private user profile data (Upcoming) |
-| **Public Info** | `GET` | `/public/info` | Public | Returns general public information (Upcoming) |
+| Operation | HTTP Method | Path | Access Level | Status | Description |
+| :--- | :---: | :--- | :--- | :---: | :--- |
+| **Root Metadata** | `GET` | `/` | Public | Completed | System status and available endpoints |
+| **Health Monitor** | `GET` | `/health` | Public | Completed | Server uptime and status |
+| **User Sign Up** | `POST` | `/auth/signup` | Public | Completed | Creates new user account in Supabase |
+| **User Log In** | `POST` | `/auth/login` | Public | Completed | Authenticates user and returns JWT |
+| **List Tasks** | `GET` | `/tasks` | Open / Pre-auth | Completed | Retrieves tasks from PostgreSQL database |
+| **Get Task by ID** | `GET` | `/tasks/{id}` | Open / Pre-auth | Completed | Retrieves single task by primary key |
+| **Create Task** | `POST` | `/tasks` | Open / Pre-auth | Completed | Inserts new task into database |
+| **Update Task** | `PUT` | `/tasks/{id}` | Open / Pre-auth | Completed | Updates task title or done state |
+| **Delete Task** | `DELETE` | `/tasks/{id}` | Open / Pre-auth | Completed | Deletes task row from database |
+| **User Log Out** | `POST` | `/auth/logout` | Protected | Upcoming | Terminates user session |
+| **User Profile** | `GET` | `/protected/profile` | Protected | Upcoming | Returns private user profile data |
+| **Public Info** | `GET` | `/public/info` | Public | Upcoming | Returns general public information |
+
