@@ -199,12 +199,51 @@ curl.exe -i -X POST http://localhost:3000/auth/login \
 
 ---
 
+## Stage 2 Verification (The Public & Protected Gates)
+
+Stage 2 introduces public access alongside header-based gatekeeping for protected routes.
+
+### 1. Public Info Gate (`GET /public/info`)
+Accessible by any client without authentication credentials:
+```bash
+curl.exe -i http://localhost:3000/public/info
+```
+**Response (`200 OK`)**:
+```json
+{"message":"Welcome stranger! This info is public."}
+```
+
+### 2. Protected Gate Without Token (`GET /protected/profile`)
+Clients attempting to access the protected profile without a valid `Authorization: Bearer <token>` header are rejected immediately:
+```bash
+curl.exe -i http://localhost:3000/protected/profile
+```
+**Response (`401 Unauthorized`)**:
+```json
+{"error":"Access token required"}
+```
+
+### 3. Protected Gate With Token (`GET /protected/profile`)
+When an `Authorization: Bearer <token>` header is provided:
+```bash
+curl.exe -i http://localhost:3000/protected/profile \
+  -H "Authorization: Bearer <token>"
+```
+**Response (`200 OK`)**:
+```json
+{"message":"Access token received (unverified)","token":"<token>"}
+```
+
+---
+
 ## API Endpoints Matrix
 
 | Operation | HTTP Method | Path | Access Level | Status | Description |
 | :--- | :---: | :--- | :--- | :---: | :--- |
 | **Root Metadata** | `GET` | `/` | Public | Completed | System status and available endpoints |
 | **Health Monitor** | `GET` | `/health` | Public | Completed | Server uptime and status |
+| **Public Info Gate** | `GET` | `/public/info` | Public | Completed | Unprotected public information |
+| **Protected Profile Gate** | `GET` | `/protected/profile` | Protected | Completed | Header gatekeeper (`Bearer <token>`) |
 | **User Sign Up** | `POST` | `/auth/signup` | Public | Completed | Creates new user account in Supabase |
 | **User Log In** | `POST` | `/auth/login` | Public | Completed | Authenticates user and returns JWT |
 | **List Tasks** | `GET` | `/tasks` | Open / Pre-auth | Completed | Retrieves tasks from PostgreSQL database |
@@ -213,6 +252,5 @@ curl.exe -i -X POST http://localhost:3000/auth/login \
 | **Update Task** | `PUT` | `/tasks/{id}` | Open / Pre-auth | Completed | Updates task title or done state |
 | **Delete Task** | `DELETE` | `/tasks/{id}` | Open / Pre-auth | Completed | Deletes task row from database |
 | **User Log Out** | `POST` | `/auth/logout` | Protected | Upcoming | Terminates user session |
-| **User Profile** | `GET` | `/protected/profile` | Protected | Upcoming | Returns private user profile data |
-| **Public Info** | `GET` | `/public/info` | Public | Upcoming | Returns general public information |
+
 

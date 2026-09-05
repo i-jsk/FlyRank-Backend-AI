@@ -63,7 +63,45 @@ def read_root():
     return {
         "status": "online",
         "message": "Server running and connected to Supabase",
-        "endpoints": ["/auth/signup", "/auth/login", "/tasks", "/docs", "/health"],
+        "endpoints": [
+            "/public/info",
+            "/protected/profile",
+            "/auth/signup",
+            "/auth/login",
+            "/tasks",
+            "/docs",
+            "/health",
+        ],
+    }
+
+
+@app.get("/public/info", status_code=200, summary="Public Information Gate")
+def public_info():
+    """Unprotected public endpoint accessible by anyone."""
+    return {"message": "Welcome stranger! This info is public."}
+
+
+@app.get("/protected/profile", status_code=200, summary="Protected Profile Gate")
+def protected_profile(request: Request):
+    """Protected endpoint requiring Authorization: Bearer <token> header."""
+    auth_header = request.headers.get("authorization")
+    if not auth_header:
+        return JSONResponse(
+            status_code=401,
+            content={"error": "Access token required"},
+        )
+
+    parts = auth_header.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer" or not parts[1].strip():
+        return JSONResponse(
+            status_code=401,
+            content={"error": "Access token required"},
+        )
+
+    token = parts[1].strip()
+    return {
+        "message": "Access token received (unverified)",
+        "token": token,
     }
 
 
