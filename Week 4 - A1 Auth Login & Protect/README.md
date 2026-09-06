@@ -334,6 +334,17 @@ server: uvicorn
 
 ---
 
+## Stage 5 Verification (See it: Swagger UI - Visualizing the Secure Doors)
+
+FastAPI automatically serves interactive API documentation at `http://localhost:3000/docs`. The OpenAPI specification is configured with the `HTTPBearer` security scheme in `dependencies.py` and mapped across all protected routes (`/protected/profile`, `/protected/dashboard`, `/auth/logout`).
+
+### 1. Swagger UI Interface & Authorize Padlock
+Protected endpoints feature a dedicated padlock icon on the route bar. The global **Authorize** button allows pasting the JWT access token once to unlock all guarded endpoints for testing:
+
+![Swagger UI Authorize and Routes](Swagger%20UI-%20Authorize%20%26%20Routes.jpeg)
+
+---
+
 ## API Endpoints Matrix
 
 | Operation | HTTP Method | Path | Access Level | Status | Description |

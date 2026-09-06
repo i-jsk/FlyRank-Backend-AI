@@ -42,7 +42,7 @@ app = FastAPI(
     description="Week 4 Assignment 1: Auth Login & Protect with Supabase IdP",
     version="1.0.0",
     swagger_ui_parameters={
-        "defaultModelsExpandDepth": -1,
+        "defaultModelsExpandDepth": 1,
         "docExpansion": "list",
     },
 )
@@ -70,7 +70,7 @@ app.include_router(auth_router)
 app.include_router(tasks_router)
 
 
-@app.get("/", status_code=200, summary="Root API Metadata")
+@app.get("/", status_code=200, summary="Root API Metadata", tags=["System"])
 def read_root():
     """API metadata and connection status."""
     return {
@@ -90,13 +90,13 @@ def read_root():
     }
 
 
-@app.get("/public/info", status_code=200, summary="Public Information Gate")
+@app.get("/public/info", status_code=200, summary="Public Information Gate", tags=["Public"])
 def public_info():
     """Unprotected public endpoint accessible by anyone."""
     return {"message": "Welcome stranger! This info is public."}
 
 
-@app.get("/protected/profile", status_code=200, summary="Protected Profile Gate")
+@app.get("/protected/profile", status_code=200, summary="Protected Profile Gate", tags=["Protected"])
 def protected_profile(current_user = Depends(get_current_user)):
     """Protected endpoint requiring and verifying Authorization: Bearer <token>."""
     user_data = jsonable_encoder(current_user)
@@ -105,7 +105,7 @@ def protected_profile(current_user = Depends(get_current_user)):
     return JSONResponse(status_code=200, content=response_content)
 
 
-@app.get("/protected/dashboard", status_code=200, summary="Protected Dashboard Checkpoint")
+@app.get("/protected/dashboard", status_code=200, summary="Protected Dashboard Checkpoint", tags=["Protected"])
 def protected_dashboard(current_user = Depends(get_current_user)):
     """Second protected endpoint demonstrating auth dependency reuse."""
     return {
@@ -114,7 +114,7 @@ def protected_dashboard(current_user = Depends(get_current_user)):
     }
 
 
-@app.get("/health", status_code=200, summary="Server Health Monitor")
+@app.get("/health", status_code=200, summary="Server Health Monitor", tags=["System"])
 def read_health():
     """Server health status monitor."""
     return {"status": "ok"}
