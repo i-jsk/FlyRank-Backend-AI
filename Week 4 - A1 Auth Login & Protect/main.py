@@ -1,11 +1,15 @@
 import os
 import sys
 from pathlib import Path
+from typing import Optional
+
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # Ensure current package path is available for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -81,28 +85,54 @@ def public_info():
     return {"message": "Welcome stranger! This info is public."}
 
 
+security = HTTPBearer(auto_error=False)
+
+
 @app.get("/protected/profile", status_code=200, summary="Protected Profile Gate")
-def protected_profile(request: Request):
-    """Protected endpoint requiring Authorization: Bearer <token> header."""
-    auth_header = request.headers.get("authorization")
-    if not auth_header:
+def protected_profile(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+):
+    """Protected endpoint requiring and verifying Authorization: Bearer <token>."""
+    # Check if credentials was provided and is Bearer scheme
+    if not credentials or not credentials.credentials:
+        # Fallback check on raw request header if any
+        auth_header = request.headers.get("authorization")
+        if not auth_header:
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Access token required"},
+            )
+        parts = auth_header.split()
+        if len(parts) != 2 or parts[0].lower() != "bearer" or not parts[1].strip():
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Access token required"},
+            )
+        token = parts[1].strip()
+    else:
+        token = credentials.credentials.strip()
+
+    try:
+        # Call Supabase SDK to verify token and retrieve user data
+        user_response = supabase.auth.get_user(token)
+        if not user_response or not user_response.user:
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Invalid or expired token"},
+            )
+
+        user_data = jsonable_encoder(user_response.user)
+        response_content = dict(user_data)
+        response_content["user"] = user_data
+        return JSONResponse(status_code=200, content=response_content)
+
+    except Exception:
+        # If Supabase determines the token is expired, tampered with, or invalid
         return JSONResponse(
             status_code=401,
-            content={"error": "Access token required"},
+            content={"error": "Invalid or expired token"},
         )
-
-    parts = auth_header.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer" or not parts[1].strip():
-        return JSONResponse(
-            status_code=401,
-            content={"error": "Access token required"},
-        )
-
-    token = parts[1].strip()
-    return {
-        "message": "Access token received (unverified)",
-        "token": token,
-    }
 
 
 @app.get("/health", status_code=200, summary="Server Health Monitor")

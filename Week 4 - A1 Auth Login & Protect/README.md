@@ -223,8 +223,8 @@ curl.exe -i http://localhost:3000/protected/profile
 {"error":"Access token required"}
 ```
 
-### 3. Protected Gate With Token (`GET /protected/profile`)
-When an `Authorization: Bearer <token>` header is provided:
+### 3. Protected Gate With Token (Stage 2 Unverified Gate)
+When an `Authorization: Bearer <token>` header was provided without verification:
 ```bash
 curl.exe -i http://localhost:3000/protected/profile \
   -H "Authorization: Bearer <token>"
@@ -236,6 +236,53 @@ curl.exe -i http://localhost:3000/protected/profile \
 
 ---
 
+## Stage 3 Verification (The Guard: Token Verification)
+
+Stage 3 upgrades `GET /protected/profile` to cryptographically verify the incoming JWT with Supabase using `supabase.auth.get_user(token)`.
+
+### 1. Verified Profile Access with Valid JWT (`200 OK`)
+Log in via `POST /auth/login` to retrieve your fresh `access_token`, then pass it in the `Authorization` header:
+
+```bash
+curl.exe -i http://localhost:3000/protected/profile \
+  -H "Authorization: Bearer <VALID_ACCESS_TOKEN>"
+```
+
+**Response (`200 OK`)**:
+Returns the authenticated user's secure metadata (ID, email, creation timestamp):
+```json
+{
+  "id": "ba593210-3ca9-4af1-9a9c-ecc328e4796a",
+  "email": "checkpoint_user@flyrank.com",
+  "created_at": "2026-09-05T21:03:41.155551Z",
+  "app_metadata": { "provider": "email", "providers": ["email"] },
+  "user_metadata": { "email": "checkpoint_user@flyrank.com" }
+}
+```
+
+### 2. Tampered or Invalid Token Rejection (`401 Unauthorized`)
+If the token is modified by even a single character, expired, or malformed:
+
+```bash
+curl.exe -i http://localhost:3000/protected/profile \
+  -H "Authorization: Bearer <TAMPERED_OR_INVALID_TOKEN>"
+```
+
+**Response (`401 Unauthorized`)**:
+```json
+{"error":"Invalid or expired token"}
+```
+
+### 3. Interactive Browser Testing via Swagger UI
+You can also verify the entire flow interactively in the browser at `http://localhost:3000/docs`:
+1. Execute `POST /auth/login` to obtain your `access_token`.
+2. Click the green **Authorize** button (with the lock icon 🔓) at the top right of the Swagger UI page.
+3. Paste your `access_token` into the **Value** field and click **Authorize**, then click **Close**.
+4. Expand `GET /protected/profile`, click **Try it out**, and click **Execute**.
+5. The request returns `200 OK` with your profile data.
+
+---
+
 ## API Endpoints Matrix
 
 | Operation | HTTP Method | Path | Access Level | Status | Description |
@@ -243,7 +290,7 @@ curl.exe -i http://localhost:3000/protected/profile \
 | **Root Metadata** | `GET` | `/` | Public | Completed | System status and available endpoints |
 | **Health Monitor** | `GET` | `/health` | Public | Completed | Server uptime and status |
 | **Public Info Gate** | `GET` | `/public/info` | Public | Completed | Unprotected public information |
-| **Protected Profile Gate** | `GET` | `/protected/profile` | Protected | Completed | Header gatekeeper (`Bearer <token>`) |
+| **User Profile** | `GET` | `/protected/profile` | Protected | Completed | Verified profile data via Supabase JWT |
 | **User Sign Up** | `POST` | `/auth/signup` | Public | Completed | Creates new user account in Supabase |
 | **User Log In** | `POST` | `/auth/login` | Public | Completed | Authenticates user and returns JWT |
 | **List Tasks** | `GET` | `/tasks` | Open / Pre-auth | Completed | Retrieves tasks from PostgreSQL database |
@@ -252,5 +299,6 @@ curl.exe -i http://localhost:3000/protected/profile \
 | **Update Task** | `PUT` | `/tasks/{id}` | Open / Pre-auth | Completed | Updates task title or done state |
 | **Delete Task** | `DELETE` | `/tasks/{id}` | Open / Pre-auth | Completed | Deletes task row from database |
 | **User Log Out** | `POST` | `/auth/logout` | Protected | Upcoming | Terminates user session |
+
 
 
