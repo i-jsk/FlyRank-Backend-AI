@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
+from dependencies import get_current_user
 from schemas import UserAuth
 from supabase_client import supabase
 
@@ -101,3 +102,25 @@ def login(payload: UserAuth):
             status_code=401,
             content={"error": "Invalid login credentials"},
         )
+
+
+@router.post("/logout", status_code=204, summary="User Log Out")
+def logout(request: Request, current_user = Depends(get_current_user)):
+    """Terminate the authenticated user's session with Supabase Auth.
+
+    This is a protected endpoint guarded by the auth dependency.
+    Calls Supabase sign_out and returns 204 No Content.
+    """
+    token = getattr(request.state, "token", None)
+    if token:
+        try:
+            supabase.auth.admin.sign_out(token)
+        except Exception:
+            pass
+
+    try:
+        supabase.auth.sign_out()
+    except Exception:
+        pass
+
+    return Response(status_code=204)

@@ -9,7 +9,6 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # Ensure current package path is available for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -25,6 +24,7 @@ from supabase_client import supabase
 print("Server running and connected to Supabase", flush=True)
 
 from database import init_db
+from dependencies import AuthException, get_current_user
 from routers.tasks import router as tasks_router
 from routers.auth import router as auth_router
 
@@ -56,6 +56,15 @@ def validation_exception_handler(request: Request, exc: RequestValidationError):
     )
 
 
+# Custom auth exception handler to format 401 error JSON
+@app.exception_handler(AuthException)
+def auth_exception_handler(request: Request, exc: AuthException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": exc.error},
+    )
+
+
 # Register modular routers
 app.include_router(auth_router)
 app.include_router(tasks_router)
@@ -70,8 +79,10 @@ def read_root():
         "endpoints": [
             "/public/info",
             "/protected/profile",
+            "/protected/dashboard",
             "/auth/signup",
             "/auth/login",
+            "/auth/logout",
             "/tasks",
             "/docs",
             "/health",
@@ -85,54 +96,22 @@ def public_info():
     return {"message": "Welcome stranger! This info is public."}
 
 
-security = HTTPBearer(auto_error=False)
-
-
 @app.get("/protected/profile", status_code=200, summary="Protected Profile Gate")
-def protected_profile(
-    request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-):
+def protected_profile(current_user = Depends(get_current_user)):
     """Protected endpoint requiring and verifying Authorization: Bearer <token>."""
-    # Check if credentials was provided and is Bearer scheme
-    if not credentials or not credentials.credentials:
-        # Fallback check on raw request header if any
-        auth_header = request.headers.get("authorization")
-        if not auth_header:
-            return JSONResponse(
-                status_code=401,
-                content={"error": "Access token required"},
-            )
-        parts = auth_header.split()
-        if len(parts) != 2 or parts[0].lower() != "bearer" or not parts[1].strip():
-            return JSONResponse(
-                status_code=401,
-                content={"error": "Access token required"},
-            )
-        token = parts[1].strip()
-    else:
-        token = credentials.credentials.strip()
+    user_data = jsonable_encoder(current_user)
+    response_content = dict(user_data)
+    response_content["user"] = user_data
+    return JSONResponse(status_code=200, content=response_content)
 
-    try:
-        # Call Supabase SDK to verify token and retrieve user data
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            return JSONResponse(
-                status_code=401,
-                content={"error": "Invalid or expired token"},
-            )
 
-        user_data = jsonable_encoder(user_response.user)
-        response_content = dict(user_data)
-        response_content["user"] = user_data
-        return JSONResponse(status_code=200, content=response_content)
-
-    except Exception:
-        # If Supabase determines the token is expired, tampered with, or invalid
-        return JSONResponse(
-            status_code=401,
-            content={"error": "Invalid or expired token"},
-        )
+@app.get("/protected/dashboard", status_code=200, summary="Protected Dashboard Checkpoint")
+def protected_dashboard(current_user = Depends(get_current_user)):
+    """Second protected endpoint demonstrating auth dependency reuse."""
+    return {
+        "message": f"Welcome to the dashboard, {current_user.email}!",
+        "user_id": current_user.id,
+    }
 
 
 @app.get("/health", status_code=200, summary="Server Health Monitor")

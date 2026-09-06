@@ -283,6 +283,57 @@ You can also verify the entire flow interactively in the browser at `http://loca
 
 ---
 
+## Stage 4 Verification (Middleware Protection & Logout)
+
+Stage 4 extracts authentication validation into a reusable dependency (`get_current_user` in `dependencies.py`), implements `POST /auth/logout`, and adds a second protected route `GET /protected/dashboard` to prove guard reuse with zero duplicate auth code.
+
+### 1. Second Protected Route Checkpoint (`GET /protected/dashboard`)
+Proves reusable dependency guard on a new route:
+
+```bash
+# Valid Token -> 200 OK
+curl.exe -i http://localhost:3000/protected/dashboard \
+  -H "Authorization: Bearer <VALID_ACCESS_TOKEN>"
+```
+
+**Response (`200 OK`)**:
+```json
+{
+  "message": "Welcome to the dashboard, checkpoint_user@flyrank.com!",
+  "user_id": "ba593210-3ca9-4af1-9a9c-ecc328e4796a"
+}
+```
+
+```bash
+# Bad or Tampered Token -> 401 Unauthorized
+curl.exe -i http://localhost:3000/protected/dashboard \
+  -H "Authorization: Bearer bad_token_xyz"
+```
+
+**Response (`401 Unauthorized`)**:
+```json
+{"error":"Invalid or expired token"}
+```
+
+### 2. User Log Out (`POST /auth/logout`)
+Terminates the user's session in Supabase Auth. Requires valid authorization and returns `204 No Content`:
+
+```bash
+curl.exe -i -X POST http://localhost:3000/auth/logout \
+  -H "Authorization: Bearer <VALID_ACCESS_TOKEN>"
+```
+
+**Response (`204 No Content`)**:
+```http
+HTTP/1.1 204 No Content
+date: ...
+server: uvicorn
+```
+
+*(Subsequent requests using this logged-out token will be rejected with `401 Unauthorized: Invalid or expired token`).*
+
+---
+
 ## API Endpoints Matrix
 
 | Operation | HTTP Method | Path | Access Level | Status | Description |
@@ -290,15 +341,16 @@ You can also verify the entire flow interactively in the browser at `http://loca
 | **Root Metadata** | `GET` | `/` | Public | Completed | System status and available endpoints |
 | **Health Monitor** | `GET` | `/health` | Public | Completed | Server uptime and status |
 | **Public Info Gate** | `GET` | `/public/info` | Public | Completed | Unprotected public information |
-| **User Profile** | `GET` | `/protected/profile` | Protected | Completed | Verified profile data via Supabase JWT |
+| **User Profile** | `GET` | `/protected/profile` | Protected | Completed | Verified profile data via reusable dependency |
+| **Dashboard Checkpoint** | `GET` | `/protected/dashboard` | Protected | Completed | Second protected route proving dependency reuse |
 | **User Sign Up** | `POST` | `/auth/signup` | Public | Completed | Creates new user account in Supabase |
 | **User Log In** | `POST` | `/auth/login` | Public | Completed | Authenticates user and returns JWT |
+| **User Log Out** | `POST` | `/auth/logout` | Protected | Completed | Terminates user session (returns 204) |
 | **List Tasks** | `GET` | `/tasks` | Open / Pre-auth | Completed | Retrieves tasks from PostgreSQL database |
 | **Get Task by ID** | `GET` | `/tasks/{id}` | Open / Pre-auth | Completed | Retrieves single task by primary key |
 | **Create Task** | `POST` | `/tasks` | Open / Pre-auth | Completed | Inserts new task into database |
 | **Update Task** | `PUT` | `/tasks/{id}` | Open / Pre-auth | Completed | Updates task title or done state |
 | **Delete Task** | `DELETE` | `/tasks/{id}` | Open / Pre-auth | Completed | Deletes task row from database |
-| **User Log Out** | `POST` | `/auth/logout` | Protected | Upcoming | Terminates user session |
 
 
 
