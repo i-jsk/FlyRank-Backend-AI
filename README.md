@@ -42,11 +42,13 @@ FlyRank-Backend-AI/
 │   ├── main.py                            # FastAPI entrypoint & router mounting
 │   ├── supabase_client.py                 # Shared Supabase client instance
 │   ├── database.py                        # PostgreSQL connection & seeding
+│   ├── dependencies.py                    # Reusable auth dependency & security guard
 │   ├── schemas.py                         # Pydantic data contracts (Task & UserAuth)
 │   ├── routers/                           # APIRouters (auth.py, tasks.py)
 │   ├── .gitignore                         # Local git exclusions (.env, etc.)
 │   ├── .env.example                       # Environment configuration template
 │   ├── requirements.txt                   # Dependencies (FastAPI, Supabase, psycopg)
+│   ├── Swagger UI- Authorize & Routes.jpeg# Interactive API documentation screenshot
 │   └── README.md                          # Assignment documentation & verification
 └── [Future Weeks & Assignments...]        # Upcoming FlyRank Backend AI modules
 ```
@@ -57,10 +59,10 @@ FlyRank-Backend-AI/
 
 | Week / Assignment | Topic / Goal | Tech Stack | Status | Link |
 | :--- | :--- | :--- | :---: | :--- |
-| **Week 2 — A1** | **Build Your First CRUD API** (To-Do List API with FastAPI & Swagger UI) | Python 3.12, FastAPI, Uvicorn | ✅ Completed | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%202%20-%20A1%20CRUD%20API/README.md) |
-| **Week 3 — A1** | **CRUD + Database** (SQLite `tasks.db` Persistence) | Python 3.12, FastAPI, SQLite | ✅ Completed | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A1%20CRUD%20+%20Database/README.md) |
-| **Week 3 — A2** | **Containerizing Stack** (Docker + PostgreSQL + Docker Compose) | Python 3.12, FastAPI, PostgreSQL, Docker | ✅ Completed | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%203%20-%20A2%20Containerizing%20Stack/README.md) |
-| **Week 4 — A1** | **Auth Login & Protect** (Supabase Auth IdP, JWTs, Protected Endpoints) | Python 3.12, FastAPI, PostgreSQL, Docker, Supabase | 🔄 In Progress | [View Assignment](file:///j:/Documents/GitHub/FlyRank-Backend-AI/Week%204%20-%20A1%20Auth%20Login%20&%20Protect/README.md) |
+| **Week 2 — A1** | **Build Your First CRUD API** (To-Do List API with FastAPI & Swagger UI) | Python 3.12, FastAPI, Uvicorn | ✅ Completed | [View Assignment](Week%202%20-%20A1%20CRUD%20API/README.md) |
+| **Week 3 — A1** | **CRUD + Database** (SQLite `tasks.db` Persistence) | Python 3.12, FastAPI, SQLite | ✅ Completed | [View Assignment](Week%203%20-%20A1%20CRUD%20+%20Database/README.md) |
+| **Week 3 — A2** | **Containerizing Stack** (Docker + PostgreSQL + Docker Compose) | Python 3.12, FastAPI, PostgreSQL, Docker | ✅ Completed | [View Assignment](Week%203%20-%20A2%20Containerizing%20Stack/README.md) |
+| **Week 4 — A1** | **Auth Login & Protect** (Supabase Auth IdP, JWTs, Protected Endpoints) | Python 3.12, FastAPI, PostgreSQL, Docker, Supabase | ✅ Completed | [View Assignment](Week%204%20-%20A1%20Auth%20Login%20%26%20Protect/README.md) |
 
 ---
 

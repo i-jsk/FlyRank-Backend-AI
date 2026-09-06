@@ -6,242 +6,295 @@ This module builds on top of the containerized stack from Week 3, integrating us
 
 ## Overview
 
-In previous assignments, the API endpoints were unprotected, allowing unrestricted read, create, and delete access. This assignment introduces modern production-grade API security by establishing an authentication layer on top of our existing containerized Task stack.
+Task API is a production-grade RESTful service built with **Python 3.12** and **FastAPI** for the FlyRank Backend Internship. It combines containerized relational persistence in **PostgreSQL 16** with secure, identity-provider-backed authentication powered by **Supabase Auth**.
 
-Rather than implementing custom cryptography or password hashing from scratch, the system integrates with Supabase to manage user credentials, session security, and JSON Web Token (JWT) issuance.
+The service manages tasks with full CRUD operations, advanced query parameters (filtering, search, pagination), and automatic seed data. Security is managed through **JSON Web Tokens (JWT)**: users register and log in via Supabase, receive signed bearer tokens, and access protected application endpoints guarded by reusable FastAPI dependencies.
 
-### The Trust Triangle Architecture
-The system operates on a three-tier security model:
-
-1. **Client**: Authenticates with credentials (email and password) directly against the Identity Provider.
-2. **Identity Provider (Supabase Auth)**: Validates credentials and returns a signed JWT access token.
-3. **Backend Server (FastAPI)**: Verifies incoming JWTs attached to the `Authorization: Bearer <token>` header, unlocking protected routes (such as user profiles and task management).
+The entire architecture is containerized with **Docker** and orchestrated via **Docker Compose**, with PostgreSQL data persisted on a dedicated named volume.
 
 ---
 
-## Technology Stack
+## The Trust Triangle Architecture
 
-| Component | Technology | Description |
+The API implements the classic three-tier Identity Provider pattern:
+
+```text
+  +------------------+         1. Credentials (email, password)       +-----------------------+
+  |                  | ---------------------------------------------> |                       |
+  |      Client      |                                                |     Supabase Auth     |
+  | (Swagger / curl) | <--------------------------------------------- |   (Identity Provider) |
+  |                  |         2. Signed JWT (access_token)           |                       |
+  +------------------+                                                +-----------------------+
+           |
+           | 3. Protected Request
+           |    Header: Authorization: Bearer <access_token>
+           v
+  +-------------------------------------------------------------------------------------------+
+  | FastAPI Backend Server (Resource Server on Port 3000)                                     |
+  |                                                                                           |
+  |  [ Dependencies Guard: get_current_user ]                                                 |
+  |   -> Validates cryptographic JWT signature with Supabase SDK                              |
+  |   -> Rejects missing tokens: 401 Unauthorized ("Access token required")                   |
+  |   -> Rejects invalid/expired tokens: 401 Unauthorized ("Invalid or expired token")        |
+  |   -> Extracts verified user metadata and authorizes downstream endpoint execution         |
+  |                                                                                           |
+  |  [ Endpoints & Relational Database ]                                                      |
+  |   -> /protected/profile, /protected/dashboard, /auth/logout                               |
+  |   -> /tasks CRUD via psycopg (v3) -> PostgreSQL 16 Database Container                     |
+  +-------------------------------------------------------------------------------------------+
+```
+
+---
+
+## Tech Stack
+
+| Layer | Component | Description |
 | :--- | :--- | :--- |
-| **Language** | Python 3.12 | Modern typed Python runtime |
-| **Framework** | FastAPI | High-performance API framework with automatic Swagger UI |
-| **Database** | PostgreSQL 16 | Relational database engine for persistent application data |
-| **Database Adapter** | `psycopg` (v3) | PostgreSQL database adapter with binary extensions |
-| **Identity Provider** | Supabase Auth | Managed authentication service and JWT issuer |
-| **Python SDK** | `supabase` (v2.31.0) | Official Python client library for Supabase |
-| **Containers** | Docker & Docker Compose | Multi-container stack orchestration (`api` + `db`) |
-| **Configuration** | `python-dotenv` | Environment variable management |
+| **Language** | Python 3.12 | Modern typed asynchronous Python runtime |
+| **Framework** | FastAPI | High-performance API framework with OpenAPI / Swagger UI |
+| **Authentication** | Supabase Auth | Identity Provider (IdP) for password security & JWT issuance |
+| **Python SDK** | `supabase` (v2.31.0) | Official Supabase client for authentication & user retrieval |
+| **Database** | PostgreSQL 16 | ACID-compliant relational persistence engine |
+| **Database Driver** | `psycopg` (v3) | High-performance PostgreSQL database adapter |
+| **Containerization** | Docker | Container specification for reproducible deployments |
+| **Orchestration** | Docker Compose | Multi-container coordination (`api` + `db`) |
+| **Server** | Uvicorn | Lightning-fast ASGI web server |
+| **Configuration** | `python-dotenv` | 12-Factor environment configuration |
 
 ---
 
-## Environment Configuration
+## Quickstart: Run in Under 5 Minutes
 
-Configuration is managed via environment variables. Before starting the service, copy `.env.example`:
+### 1. Clone the Repository
+```bash
+git clone https://github.com/i-jsk/FlyRank-Backend-AI.git
+cd "FlyRank-Backend-AI/Week 4 - A1 Auth Login & Protect"
+```
 
+### 2. Configure Environment Variables
+Copy the `.env.example` template to `.env`:
 ```bash
 cp .env.example .env
 ```
 
-### Configuration Variables ([.env.example](.env.example)):
-| Variable | Example Value | Description |
-| :--- | :--- | :--- |
-| `DATABASE_URL` | `postgresql://postgres:dev@db:5432/tasks` | Internal connection string for PostgreSQL |
-| `POSTGRES_USER` | `postgres` | Database administrator username |
-| `POSTGRES_PASSWORD` | `dev` | Database administrator password |
-| `POSTGRES_DB` | `tasks` | Initial application database name |
-| `POSTGRES_PORT` | `5432` | PostgreSQL database port |
-| `SUPABASE_URL` | `https://<project-ref>.supabase.co` | Supabase project API URL (Project Settings -> API) |
-| `SUPABASE_KEY` | `your_anon_key` | Supabase anonymous public API key |
-| `PORT` | `3000` | Application server port |
+Open `.env` and plug in your Supabase project credentials:
+```env
+DATABASE_URL=postgresql://postgres:dev@db:5432/tasks
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=dev
+POSTGRES_DB=tasks
+POSTGRES_PORT=5432
 
-> [!NOTE]
-> `.env` is excluded from version control via `.gitignore` to prevent secret exposure. Only `.env.example` is tracked.
+SUPABASE_URL=https://<your-project-ref>.supabase.co
+SUPABASE_KEY=<your-anon-public-key>
+PORT=3000
+```
 
----
+> [!TIP]
+> **One-Time Supabase Dashboard Setting**:
+> Under **Authentication -> Providers -> Email**, turn **Confirm email** off so newly created accounts can log in immediately without waiting for an email confirmation link.
 
-## Quick Start (Docker Compose)
-
-Start the entire stack (FastAPI API server + PostgreSQL database) with one command:
-
+### 3. Build and Start With Docker Compose
 ```bash
 docker compose up -d --build
 ```
 
-To view container logs:
-```bash
-docker compose logs -f api
-```
+The services will initialize automatically:
+- PostgreSQL container spins up and establishes the `tasks` schema with seed tasks.
+- FastAPI container starts on port `3000` and connects to both PostgreSQL and Supabase.
 
-To stop and remove containers:
-```bash
-docker compose down
-```
-
----
-
-## Local Development (Standalone)
-
-To run the FastAPI server directly in a local Python virtual environment:
-
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Run the application:
-   ```bash
-   python main.py
-   ```
-   *(or `uvicorn main:app --host 0.0.0.0 --port 3000 --reload`)*
-
----
-
-## Stage 0 Checkpoint Verification
-
-When the stack initializes, the API container connects to both the PostgreSQL database and the Supabase Identity Provider, logging:
-
+API Root:
 ```text
-INFO:     Started server process [7]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-Database connected and initialized successfully.
-Server running and connected to Supabase
-INFO:     Uvicorn running on http://0.0.0.0:3000 (Press CTRL+C to quit)
+http://localhost:3000
 ```
 
-### Verification Query 1: Root Metadata (`GET /`)
-```text
-$ curl.exe -i http://localhost:3000/
-
-HTTP/1.1 200 OK
-content-type: application/json
-
-{"status":"online","message":"Server running and connected to Supabase","endpoints":["/tasks","/docs","/health"]}
-```
-
-### Verification Query 2: Persisted Tasks (`GET /tasks`)
-```text
-$ curl.exe -i http://localhost:3000/tasks
-
-HTTP/1.1 200 OK
-content-type: application/json
-
-[
-  {"id":1,"title":"Setup FastAPI project","done":true},
-  {"id":2,"title":"Build Stage 2 read endpoints","done":false},
-  {"id":3,"title":"Publish to GitHub","done":false}
-]
-```
-
-Interactive Swagger UI documentation is available at:
+Interactive Swagger UI Documentation:
 ```text
 http://localhost:3000/docs
 ```
 
+To view live container logs:
+```bash
+docker compose logs -f api
+```
+
+To stop the services:
+```bash
+docker compose down
+```
+
+To stop and remove persistent database storage:
+```bash
+docker compose down -v
+```
+
 ---
 
-## Stage 1 Verification (Open Auth: Sign Up & Log In)
+## Standalone Development (Without Docker)
 
-Stage 1 implements user registration (`POST /auth/signup`) and authentication (`POST /auth/login`) via Supabase Auth IdP.
+You can also run FastAPI directly on the host machine using Python while keeping PostgreSQL running in Docker (or on a local PostgreSQL instance):
 
-> [!TIP]
-> **One-Time Supabase Setting**: In your Supabase Dashboard under **Authentication → Providers → Email**, turn **Confirm email** off so new users can log in immediately after registration without waiting for verification emails.
+```bash
+# 1. Create and activate a Python virtual environment
+python -m venv .venv
+
+# Windows:
+.venv\Scripts\activate
+# Linux/macOS:
+source .venv/bin/activate
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Configure .env for host connection (use localhost instead of db hostname)
+# DATABASE_URL=postgresql://postgres:dev@localhost:5432/tasks
+
+# 4. Start the application
+python main.py
+# or: uvicorn main:app --host 127.0.0.1 --port 3000 --reload
+```
+
+---
+
+## Environment Variables Reference
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | `postgresql://postgres:dev@db:5432/tasks` | PostgreSQL connection URI for `psycopg` |
+| `POSTGRES_USER` | `postgres` | Database administrator username |
+| `POSTGRES_PASSWORD` | `dev` | Database administrator password |
+| `POSTGRES_DB` | `tasks` | Relational database name |
+| `POSTGRES_PORT` | `5432` | Database port exposed to host |
+| `SUPABASE_URL` | `https://your-project.supabase.co` | Supabase project API gateway URL |
+| `SUPABASE_KEY` | `your_anon_key` | Supabase anonymous public client API key |
+| `PORT` | `3000` | FastAPI server listening port |
+
+> [!CRITICAL]
+> **Secret Security**: The `.env` file containing private credentials is listed in `.gitignore` and is never committed to GitHub. Only `.env.example` with dummy values is tracked.
+
+---
+
+## Interactive Swagger UI Documentation
+
+FastAPI automatically generates interactive OpenAPI documentation at:
+```text
+http://localhost:3000/docs
+```
+
+### Visualizing the Secure Doors
+Protected endpoints feature a padlock icon on the route bar. The global **Authorize** button allows pasting the JWT access token once to test all guarded endpoints across the session:
+
+![Swagger UI Authorize and Routes](Swagger%20UI-%20Authorize%20%26%20Routes.jpeg)
+
+#### Using the Authorize Button:
+1. Execute `POST /auth/login` to obtain an `access_token`.
+2. Click the green **Authorize** padlock button at the top right.
+3. Paste the token string into the **Value** input field and click **Authorize**, then click **Close**.
+4. Test any protected route (`/protected/profile`, `/protected/dashboard`, `/auth/logout`) with **Try it out** -> **Execute**.
+
+---
+
+## API Endpoints Reference
+
+### Authentication Endpoints
+
+| Method | Endpoint | Description | Access Level | Success | Error Responses |
+| :--- | :--- | :--- | :---: | :---: | :---: |
+| `POST` | `/auth/signup` | Register new user account in Supabase | Public | `201 Created` | `400 Bad Request` (missing/empty credentials) |
+| `POST` | `/auth/login` | Authenticate user and issue JWT | Public | `200 OK` | `400 Bad Request`, `401 Unauthorized` |
+| `POST` | `/auth/logout` | Terminate session and revoke JWT | Protected | `204 No Content` | `401 Unauthorized` (missing or invalid token) |
+
+### Public & System Endpoints
+
+| Method | Endpoint | Description | Access Level | Response |
+| :--- | :--- | :--- | :---: | :---: |
+| `GET` | `/` | API status, greeting, and available endpoints | Public | `200 OK` |
+| `GET` | `/health` | Server health check and uptime monitor | Public | `200 OK` |
+| `GET` | `/public/info` | Unprotected informational announcement | Public | `200 OK` |
+| `GET` | `/docs` | Interactive Swagger UI documentation | Public | `200 OK` |
+
+### Protected Endpoints
+
+All protected endpoints require the header:
+```http
+Authorization: Bearer <access_token>
+```
+
+| Method | Endpoint | Description | Access Level | Response |
+| :--- | :--- | :--- | :---: | :---: |
+| `GET` | `/protected/profile` | Retrieve verified user identity & metadata | Protected | `200 OK` / `401 Unauthorized` |
+| `GET` | `/protected/dashboard` | Protected dashboard verifying guard reuse | Protected | `200 OK` / `401 Unauthorized` |
+| `POST` | `/auth/logout` | Terminate user session in Supabase | Protected | `204 No Content` / `401 Unauthorized` |
+
+### Task Management Endpoints (PostgreSQL CRUD)
+
+| Method | Endpoint | Description | Access Level | Response |
+| :--- | :--- | :--- | :---: | :---: |
+| `GET` | `/tasks` | List all tasks (supports filtering, search, pagination) | Open / Pre-auth | `200 OK` |
+| `GET` | `/tasks/{id}` | Retrieve single task by primary key | Open / Pre-auth | `200 OK` / `404 Not Found` |
+| `POST` | `/tasks` | Create new task | Open / Pre-auth | `201 Created` / `400 Bad Request` |
+| `PUT` | `/tasks/{id}` | Update task title and/or done state | Open / Pre-auth | `200 OK` / `404 Not Found` |
+| `DELETE` | `/tasks/{id}` | Delete task by primary key | Open / Pre-auth | `204 No Content` / `404 Not Found` |
+
+---
+
+## Authentication & Authorization Examples
 
 ### 1. User Sign Up (`POST /auth/signup`)
 ```bash
 curl.exe -i -X POST http://localhost:3000/auth/signup \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
+  -d '{"email":"developer@flyrank.com","password":"SecurePassword123!"}'
 ```
+
 **Response (`201 Created`)**:
-Returns the created user object from Supabase (containing user `id`, `email`, `created_at`, etc.).
-
-### 2. Validation Checks (`400 Bad Request`)
-If `email` or `password` is missing, empty, or whitespace, the server rejects the request:
-```bash
-curl.exe -i -X POST http://localhost:3000/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com"}'
-```
-**Response (`400 Bad Request`)**:
-```json
-{"error":"Email and password are required"}
-```
-
-### 3. User Log In (`POST /auth/login`)
-```bash
-curl.exe -i -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
-```
-**Response (`200 OK`)**:
-Returns session credentials including the cryptographic `access_token` (JWT) and `refresh_token`:
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refresh_token": "...",
-  "token_type": "bearer",
-  "user": { "id": "...", "email": "test@example.com" }
+  "id": "ba593210-3ca9-4af1-9a9c-ecc328e4796a",
+  "email": "developer@flyrank.com",
+  "created_at": "2026-09-06T12:00:00.000000Z",
+  "app_metadata": { "provider": "email", "providers": ["email"] }
 }
 ```
 
-### 4. Invalid Credentials Handling (`401 Unauthorized`)
-If an invalid email or password is provided:
+If email or password is omitted:
+```json
+// HTTP 400 Bad Request
+{"error": "Email and password are required"}
+```
+
+---
+
+### 2. User Log In (`POST /auth/login`)
 ```bash
 curl.exe -i -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"wrong@example.com","password":"wrongpassword"}'
+  -d '{"email":"developer@flyrank.com","password":"SecurePassword123!"}'
 ```
-**Response (`401 Unauthorized`)**:
+
+**Response (`200 OK`)**:
 ```json
-{"error":"Invalid login credentials"}
+{
+  "access_token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "xk67cu5vybss...",
+  "token_type": "bearer",
+  "user": {
+    "id": "ba593210-3ca9-4af1-9a9c-ecc328e4796a",
+    "email": "developer@flyrank.com"
+  }
+}
+```
+
+If incorrect credentials are submitted:
+```json
+// HTTP 401 Unauthorized
+{"error": "Invalid login credentials"}
 ```
 
 ---
 
-## Stage 2 Verification (The Public & Protected Gates)
-
-Stage 2 introduces public access alongside header-based gatekeeping for protected routes.
-
-### 1. Public Info Gate (`GET /public/info`)
-Accessible by any client without authentication credentials:
-```bash
-curl.exe -i http://localhost:3000/public/info
-```
-**Response (`200 OK`)**:
-```json
-{"message":"Welcome stranger! This info is public."}
-```
-
-### 2. Protected Gate Without Token (`GET /protected/profile`)
-Clients attempting to access the protected profile without a valid `Authorization: Bearer <token>` header are rejected immediately:
-```bash
-curl.exe -i http://localhost:3000/protected/profile
-```
-**Response (`401 Unauthorized`)**:
-```json
-{"error":"Access token required"}
-```
-
-### 3. Protected Gate With Token (Stage 2 Unverified Gate)
-When an `Authorization: Bearer <token>` header was provided without verification:
-```bash
-curl.exe -i http://localhost:3000/protected/profile \
-  -H "Authorization: Bearer <token>"
-```
-**Response (`200 OK`)**:
-```json
-{"message":"Access token received (unverified)","token":"<token>"}
-```
-
----
-
-## Stage 3 Verification (The Guard: Token Verification)
-
-Stage 3 upgrades `GET /protected/profile` to cryptographically verify the incoming JWT with Supabase using `supabase.auth.get_user(token)`.
-
-### 1. Verified Profile Access with Valid JWT (`200 OK`)
-Log in via `POST /auth/login` to retrieve your fresh `access_token`, then pass it in the `Authorization` header:
+### 3. Accessing Protected Profile (`GET /protected/profile`)
+Send the received JWT in the `Authorization` header:
 
 ```bash
 curl.exe -i http://localhost:3000/protected/profile \
@@ -249,49 +302,33 @@ curl.exe -i http://localhost:3000/protected/profile \
 ```
 
 **Response (`200 OK`)**:
-Returns the authenticated user's secure metadata (ID, email, creation timestamp):
 ```json
 {
   "id": "ba593210-3ca9-4af1-9a9c-ecc328e4796a",
-  "email": "checkpoint_user@flyrank.com",
-  "created_at": "2026-09-05T21:03:41.155551Z",
-  "app_metadata": { "provider": "email", "providers": ["email"] },
-  "user_metadata": { "email": "checkpoint_user@flyrank.com" }
+  "email": "developer@flyrank.com",
+  "created_at": "2026-09-06T12:00:00.000000Z",
+  "user_metadata": { "email": "developer@flyrank.com" }
 }
 ```
 
-### 2. Tampered or Invalid Token Rejection (`401 Unauthorized`)
-If the token is modified by even a single character, expired, or malformed:
-
-```bash
-curl.exe -i http://localhost:3000/protected/profile \
-  -H "Authorization: Bearer <TAMPERED_OR_INVALID_TOKEN>"
-```
-
-**Response (`401 Unauthorized`)**:
+If the authorization header is missing:
 ```json
-{"error":"Invalid or expired token"}
+// HTTP 401 Unauthorized
+{"error": "Access token required"}
 ```
 
-### 3. Interactive Browser Testing via Swagger UI
-You can also verify the entire flow interactively in the browser at `http://localhost:3000/docs`:
-1. Execute `POST /auth/login` to obtain your `access_token`.
-2. Click the green **Authorize** button (with the lock icon 🔓) at the top right of the Swagger UI page.
-3. Paste your `access_token` into the **Value** field and click **Authorize**, then click **Close**.
-4. Expand `GET /protected/profile`, click **Try it out**, and click **Execute**.
-5. The request returns `200 OK` with your profile data.
+If the token is tampered with or expired:
+```json
+// HTTP 401 Unauthorized
+{"error": "Invalid or expired token"}
+```
 
 ---
 
-## Stage 4 Verification (Middleware Protection & Logout)
-
-Stage 4 extracts authentication validation into a reusable dependency (`get_current_user` in `dependencies.py`), implements `POST /auth/logout`, and adds a second protected route `GET /protected/dashboard` to prove guard reuse with zero duplicate auth code.
-
-### 1. Second Protected Route Checkpoint (`GET /protected/dashboard`)
-Proves reusable dependency guard on a new route:
+### 4. Protected Checkpoint (`GET /protected/dashboard`)
+Demonstrates auth dependency reuse with zero duplicated security logic:
 
 ```bash
-# Valid Token -> 200 OK
 curl.exe -i http://localhost:3000/protected/dashboard \
   -H "Authorization: Bearer <VALID_ACCESS_TOKEN>"
 ```
@@ -299,24 +336,15 @@ curl.exe -i http://localhost:3000/protected/dashboard \
 **Response (`200 OK`)**:
 ```json
 {
-  "message": "Welcome to the dashboard, checkpoint_user@flyrank.com!",
+  "message": "Welcome to the dashboard, developer@flyrank.com!",
   "user_id": "ba593210-3ca9-4af1-9a9c-ecc328e4796a"
 }
 ```
 
-```bash
-# Bad or Tampered Token -> 401 Unauthorized
-curl.exe -i http://localhost:3000/protected/dashboard \
-  -H "Authorization: Bearer bad_token_xyz"
-```
+---
 
-**Response (`401 Unauthorized`)**:
-```json
-{"error":"Invalid or expired token"}
-```
-
-### 2. User Log Out (`POST /auth/logout`)
-Terminates the user's session in Supabase Auth. Requires valid authorization and returns `204 No Content`:
+### 5. User Log Out (`POST /auth/logout`)
+Terminates the user session in Supabase Auth:
 
 ```bash
 curl.exe -i -X POST http://localhost:3000/auth/logout \
@@ -326,42 +354,97 @@ curl.exe -i -X POST http://localhost:3000/auth/logout \
 **Response (`204 No Content`)**:
 ```http
 HTTP/1.1 204 No Content
-date: ...
-server: uvicorn
 ```
 
-*(Subsequent requests using this logged-out token will be rejected with `401 Unauthorized: Invalid or expired token`).*
+*(Any subsequent requests using this access token will immediately receive `401 Unauthorized: Invalid or expired token` because the session has been revoked).*
 
 ---
 
-## Stage 5 Verification (See it: Swagger UI - Visualizing the Secure Doors)
+## Task API (PostgreSQL CRUD) Examples
 
-FastAPI automatically serves interactive API documentation at `http://localhost:3000/docs`. The OpenAPI specification is configured with the `HTTPBearer` security scheme in `dependencies.py` and mapped across all protected routes (`/protected/profile`, `/protected/dashboard`, `/auth/logout`).
+### Create Task (`POST /tasks`)
+```bash
+curl.exe -i -X POST http://localhost:3000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Ship Week 4 Authentication"}'
+```
+**Response (`201 Created`)**:
+```json
+{"id":4,"title":"Ship Week 4 Authentication","done":false}
+```
 
-### 1. Swagger UI Interface & Authorize Padlock
-Protected endpoints feature a dedicated padlock icon on the route bar. The global **Authorize** button allows pasting the JWT access token once to unlock all guarded endpoints for testing:
+### List Tasks with Filtering & Search (`GET /tasks`)
+Query parameters can be combined:
+```bash
+curl.exe -i "http://localhost:3000/tasks?done=false&search=Authentication&limit=5&offset=0"
+```
+**Response (`200 OK`)**:
+```json
+[
+  {"id":4,"title":"Ship Week 4 Authentication","done":false}
+]
+```
 
-![Swagger UI Authorize and Routes](Swagger%20UI-%20Authorize%20%26%20Routes.jpeg)
+### Supported Query Parameters:
+| Parameter | Type | Description | Example |
+| :--- | :--- | :--- | :--- |
+| `done` | Boolean | Filter tasks by completion status | `/tasks?done=true` |
+| `search` | String | Case-insensitive title substring search | `/tasks?search=ship` |
+| `limit` | Integer | Pagination: maximum number of records to return | `/tasks?limit=10` |
+| `offset` | Integer | Pagination: number of records to skip | `/tasks?offset=5` |
 
 ---
 
-## API Endpoints Matrix
+## Project Structure
 
-| Operation | HTTP Method | Path | Access Level | Status | Description |
-| :--- | :---: | :--- | :--- | :---: | :--- |
-| **Root Metadata** | `GET` | `/` | Public | Completed | System status and available endpoints |
-| **Health Monitor** | `GET` | `/health` | Public | Completed | Server uptime and status |
-| **Public Info Gate** | `GET` | `/public/info` | Public | Completed | Unprotected public information |
-| **User Profile** | `GET` | `/protected/profile` | Protected | Completed | Verified profile data via reusable dependency |
-| **Dashboard Checkpoint** | `GET` | `/protected/dashboard` | Protected | Completed | Second protected route proving dependency reuse |
-| **User Sign Up** | `POST` | `/auth/signup` | Public | Completed | Creates new user account in Supabase |
-| **User Log In** | `POST` | `/auth/login` | Public | Completed | Authenticates user and returns JWT |
-| **User Log Out** | `POST` | `/auth/logout` | Protected | Completed | Terminates user session (returns 204) |
-| **List Tasks** | `GET` | `/tasks` | Open / Pre-auth | Completed | Retrieves tasks from PostgreSQL database |
-| **Get Task by ID** | `GET` | `/tasks/{id}` | Open / Pre-auth | Completed | Retrieves single task by primary key |
-| **Create Task** | `POST` | `/tasks` | Open / Pre-auth | Completed | Inserts new task into database |
-| **Update Task** | `PUT` | `/tasks/{id}` | Open / Pre-auth | Completed | Updates task title or done state |
-| **Delete Task** | `DELETE` | `/tasks/{id}` | Open / Pre-auth | Completed | Deletes task row from database |
+```text
+Week 4 - A1 Auth Login & Protect/
+├── Dockerfile                         # API container build instructions (Python 3.12-slim)
+├── compose.yaml                       # Multi-container orchestration (api + db)
+├── .dockerignore                      # Docker context build exclusions
+├── .gitignore                         # Local repository secret exclusions (.env, pycache)
+├── .env.example                       # Safe environment configuration template
+├── requirements.txt                   # Project dependencies (FastAPI, Supabase, psycopg)
+├── supabase_client.py                 # Shared, singleton Supabase client
+├── database.py                        # PostgreSQL connection pool, init_db, and seed tasks
+├── dependencies.py                    # Reusable auth dependency (get_current_user) & HTTPBearer
+├── schemas.py                         # Pydantic data schemas (UserAuth, TaskCreate, TaskUpdate)
+├── main.py                            # FastAPI application entrypoint & exception handlers
+├── Swagger UI- Authorize & Routes.jpeg# Verified Swagger documentation screenshot
+├── README.md                          # Production manual and specification
+└── routers/
+    ├── auth.py                        # Authentication APIRouter (signup, login, logout)
+    └── tasks.py                       # Task CRUD APIRouter (PostgreSQL queries)
+```
 
+---
 
+## PostgreSQL Persistence & Database Architecture
 
+The persistence layer uses a dedicated PostgreSQL 16 service:
+
+- **Automatic Schema Migration**: Upon container initialization, `database.py` issues `CREATE TABLE IF NOT EXISTS tasks (...)` to establish the schema.
+- **Automatic Seeding**: If the `tasks` table is empty on first boot, it seeds default demonstration tasks.
+- **Docker Volume**: Data is mounted to `taskdata_w4:/var/lib/postgresql/data`, ensuring data survives container restarts and image rebuilds.
+
+### Inspecting the Database via Container Shell:
+```bash
+docker exec -it week4-a1authloginprotect-db-1 psql -U postgres -d tasks
+```
+Common inspection SQL commands:
+```sql
+\dt
+SELECT * FROM tasks;
+```
+
+---
+
+## Stage-by-Stage Implementation Roadmap
+
+- [x] **Stage 0: Setup Server and Supabase Client** (`fd13f64`): Multi-container Docker setup, startup connection verification.
+- [x] **Stage 1: User Registration & Authentication** (`51e4677`): `POST /auth/signup` and `POST /auth/login` with 400/401 validation.
+- [x] **Stage 2: Public Route and Unverified Protected Route** (`8d2cae9`): `GET /public/info` (200) and `GET /protected/profile` header gatekeeper (401).
+- [x] **Stage 3: Profile Route Token Verification** (`cd94a41`): Cryptographic JWT verification with `supabase.auth.get_user(token)`.
+- [x] **Stage 4: Middleware Protection & Logout** (`c643ee4`): Reusable `get_current_user` dependency, `POST /auth/logout` (204), and `/protected/dashboard` checkpoint.
+- [x] **Stage 5: Swagger UI - Visualizing the Secure Doors** (`880c452`): `HTTPBearer` scheme integration, locked door icons, and Schemas model display.
+- [x] **Stage 6: Publish to GitHub & Production Documentation**: Clean environment safety, comprehensive documentation, and repository synchronization.
